@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="google-site-verification" content="XSUABHaOWN52nmhpr5x1GlgD18Mdlxs5wno8QhNdscM" />
-<meta name="google-site-verification" content="6c9mflAl79ctUJHp67ePw4sAPEWQ5y8W-an5-emqVps" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LaFeuille</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -548,7 +547,7 @@ function startOk(){
   S.m.roster.forEach(p=>{if(S.stt[K(p)]===0)p.abs=1;else delete p.abs;if(S.stt[K(p)]==2)add('in',K(p),ts);});
   S.stt=null;S.panel=null;persist();toast('✅ Composition enregistrée');draw();
 }
-const FT='<p class="mut" style="text-align:center;font-size:11px;margin:28px 0 8px">LaFeuille by Ludo Poiré (2026)</p>';
+const FT='<p class="mut" style="text-align:center;font-size:11px;margin:28px 0 8px">LaFeuille (2026)</p>';
 function dlgNo(){S.dlg=null;draw();}
 function askPeriod(p){if(S.duo=='follow'){toast('⏱ Le chrono est tenu par le saisisseur principal');return;}if(p==S.qt)return;ask(`Passer à <b>${PL(p)}</b> ?<br><span class="mut">Vérifie que toutes les stats de ${PL(S.qt)} sont enregistrées : le chrono sera remis à ${mmss(plen(p))}.</span>`,()=>setPeriod(p));}
 function lpS(){if(S.duo=='follow')return;lpF=false;clearTimeout(lpT);lpT=setTimeout(()=>{lpF=true;vib(40);setClock();},600);}
@@ -777,7 +776,7 @@ function reqOk(i){
     await sb.from('account_requests').update({status:'validated'}).eq('id',q.id);
     await loadMem();await loadReq();
     let sent=false;try{const mr=await sb.functions.invoke('send-access',{body:{email:q.email,name:q.name,password:pw}});sent=!mr.error;}catch(e){}
-    const body=encodeURIComponent('Bonjour '+q.name+',\n\nVotre compte LaFeuille est prêt : https://ludopoire.github.io/LaFeuille/\nIdentifiant : '+q.email+'\nMot de passe provisoire : '+pw+'\n\nÀ bientôt !');
+    const body=encodeURIComponent('Bonjour '+q.name+',\n\nVotre compte LaFeuille est prêt : https://lafeuille.app/\nIdentifiant : '+q.email+'\nMot de passe provisoire : '+pw+'\n\nÀ bientôt !');
     ask((sent?'📧 Accès envoyés automatiquement à '+esc(q.email)+'.<br>':'')+`✅ Compte créé.<br>Identifiant : <b>${esc(q.email)}</b><br>Mot de passe : <b>${pw}</b><br><a href="mailto:${esc(q.email)}?subject=${encodeURIComponent('Votre compte LaFeuille')}&body=${body}">✉️ Envoyer ces accès par e-mail</a>`,()=>{});
   });
 }
@@ -856,7 +855,7 @@ function doSummary(o){
     let nm='#'+p.n+' '+dn(p);while(nm.length>4&&mw('600 '+fs+'px sans-serif',nm)>cw-44-sw-14)nm=nm.slice(0,-2)+'…';
     T(nm,px+20,ty,fs,'#fff','left','600');T(st3,px+cw-20,ty,fs,'#fff','right','800');
   });
-  T('ludopoire.github.io/LaFeuille',W/2,H-45,30,'#9a97b8','center','500');
+  T('lafeuille.app',W/2,H-45,30,'#9a97b8','center','500');
   cv.toBlob(b=>{const nm=(S.m.team+'-vs-'+opn+'-resume-'+tn).replace(/\s/g,'_'),f=new File([b],nm+'.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:S.m.team+' vs '+opn}).catch(()=>{});else dl(b,nm+'.png');},'image/png');
 }
 async function tRename(){
