@@ -777,7 +777,7 @@ function reqOk(i){
     await loadMem();await loadReq();
     let sent=false;try{const mr=await sb.functions.invoke('send-access',{body:{email:q.email,name:q.name,password:pw}});sent=!mr.error;}catch(e){}
     const body=encodeURIComponent('Bonjour '+q.name+',\n\nVotre compte LaFeuille est prêt : https://lafeuille.app/\nIdentifiant : '+q.email+'\nMot de passe provisoire : '+pw+'\n\nÀ bientôt !');
-    ask((sent?'📧 Accès envoyés automatiquement à '+esc(q.email)+'.<br>':'')+`✅ Compte créé.<br>Identifiant : <b>${esc(q.email)}</b><br>Mot de passe : <b>${pw}</b><br><a href="mailto:${esc(q.email)}?subject=${encodeURIComponent('Votre compte LaFeuille')}&body=${body}">✉️ Envoyer ces accès par e-mail</a>`,()=>{});
+    ask((sent?'📧 Accès envoyés automatiquement à '+esc(q.email)+'.<br>':'')+`✅ Compte créé.<br>Identifiant : <b>${esc(q.email)}</b><br>Mot de passe : <b>${pw}</b>${sent?'':`<br><a href="mailto:${esc(q.email)}?subject=${encodeURIComponent('Votre compte LaFeuille')}&body=${body}">✉️ Envoyer ces accès par e-mail</a>`}`,()=>{});
   });
 }
 
