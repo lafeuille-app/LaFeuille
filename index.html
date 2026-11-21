@@ -3,6 +3,14 @@
 <meta name="google-site-verification" content="XSUABHaOWN52nmhpr5x1GlgD18Mdlxs5wno8QhNdscM" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LaFeuille</title>
+<meta name="description" content="LaFeuille : statistiques de basket en direct pour les clubs, statisticiens et supporters.">
+<link rel="canonical" href="https://lafeuille.app/">
+<meta property="og:type" content="website"><meta property="og:site_name" content="LaFeuille"><meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="LaFeuille – statistiques de basket en direct">
+<meta property="og:description" content="Suivez et saisissez les statistiques de vos matchs de basket en direct.">
+<meta property="og:url" content="https://lafeuille.app/"><meta property="og:image" content="https://lafeuille.app/og-image.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7c5cff">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -757,7 +765,7 @@ const reqokH=()=>`<h1>✅ Demande envoyée</h1><div class="card"><p>Merci ! Votr
 
 async function loadReq(){const r=await sb.from('account_requests').select('*').eq('status','pending').order('created_at');S.reqs=r.error?[]:(r.data||[]);if(S.view=='acc'||S.view=='home')draw();}
 function reqCardH(){const R=S.reqs||[];if(!R.length)return '';return `<div class="card"><b>📨 Demandes de compte (${R.length})</b>${R.map((q,i)=>`<div class="card"><b>${esc(q.name)}</b> <span class="mut">${esc(q.email)}</span>${q.message?`<div class="mut">${esc(q.message)}</div>`:''}${(q.groups||[]).map(g=>`<div class="mut">• ${esc(g.name)}${g.season?' · '+esc(g.season):''} — ${(g.players||[]).length} joueur(s)</div>`).join('')}<div class="row nw" style="margin-top:6px"><button class="p" onclick="reqOk(${i})">✅ Valider (Statisticien)</button><button class="nf" onclick="reqNo(${i})">🗑</button></div></div>`).join('')}</div>`;}
-function reqNo(i){const q=S.reqs[i];ask(`Refuser la demande de <b>${esc(q.name)}</b> ?`,async()=>{await sb.from('account_requests').update({status:'refused'}).eq('id',q.id);loadReq();});}
+function reqNo(i){const q=S.reqs[i];ask(`Refuser la demande de <b>${esc(q.name)}</b> ?<br><span class="mut">Un e-mail l’en informera.</span>`,async()=>{await sb.from('account_requests').update({status:'refused'}).eq('id',q.id);try{await sb.functions.invoke('send-access',{body:{kind:'refused',email:q.email,name:q.name}})}catch(e){}loadReq();});}
 function reqOk(i){
   const q=S.reqs[i],pw=Math.random().toString(36).slice(2,10);
   ask(`Créer le compte <b>${esc(q.email)}</b> (Statisticien) avec ${(q.groups||[]).length} groupe(s) et leurs joueurs ?<br><span class="mut">Mot de passe provisoire : <b>${pw}</b></span>`,async()=>{
