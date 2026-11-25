@@ -559,7 +559,24 @@ function startOk(){
   S.m.roster.forEach(p=>{if(S.stt[K(p)]===0)p.abs=1;else delete p.abs;if(S.stt[K(p)]==2)add('in',K(p),ts);});
   S.stt=null;S.panel=null;persist();toast('✅ Composition enregistrée');draw();
 }
-const FT='<p class="mut" style="text-align:center;font-size:11px;margin:28px 0 8px">LaFeuille (2026)</p>';
+const FT='<p class="mut" style="text-align:center;font-size:11px;margin:28px 0 8px">LaFeuille (2026) · <a href="#" onclick="privOpen();return false" style="color:inherit">Confidentialité</a></p>';
+const MD=()=>'<p class="mut" style="text-align:center;font-size:11px;margin:20px 0 8px"><a href="https://lafeuille.app" target="_blank" rel="noopener" style="color:inherit">'+(LANG=='en'?'Made with lafeuille.app':'Via lafeuille.app')+'</a></p>';
+const PRIV_FR=`<p style="font-size:13px"><b>Qui sommes-nous ?</b><br>LaFeuille est une application de suivi de statistiques de basket. Contact : contact@lafeuille.app</p>
+<p style="font-size:13px"><b>Données collectées</b><br>• Comptes : adresse e-mail, mot de passe (stocké de façon sécurisée), rôle et catégories autorisées.<br>• Demandes de compte : nom, adresse e-mail et informations sur les groupes saisies dans le formulaire.<br>• Matchs : numéros, noms et prénoms des joueurs, statistiques, et logos ou photos ajoutés par les utilisateurs.<br>• Usage : compteurs anonymes (démo, suivi d’un match).</p>
+<p style="font-size:13px"><b>Où et pourquoi</b><br>Les données servent uniquement à faire fonctionner LaFeuille. Elles ne sont ni vendues ni utilisées pour de la publicité. Elles sont hébergées chez Supabase ; les e-mails passent par Resend ; le site est servi par GitHub Pages et Cloudflare.</p>
+<p style="font-size:13px"><b>Conservation</b><br>Les données sont conservées tant que le compte ou l’équipe est utilisé, puis supprimées sur demande.</p>
+<p style="font-size:13px"><b>Vos droits</b><br>Vous pouvez demander l’accès, la correction ou la suppression de vos données (compte, joueur, match) en écrivant à contact@lafeuille.app.</p>
+<p style="font-size:13px"><b>Joueurs mineurs</b><br>Certains joueurs peuvent être mineurs. La personne qui saisit les données doit s’assurer de l’accord du club et des représentants légaux, ne saisir que le nécessaire (numéro, nom, prénom) et ne pas ajouter de photo sans autorisation. Les statistiques sont saisies par des bénévoles et ne sont pas officielles.</p>
+<p style="font-size:11px;opacity:.7">Mise à jour : 25 novembre 2026</p>`;
+const PRIV_EN=`<p style="font-size:13px"><b>Who we are</b><br>LaFeuille is a basketball stats tracking app. Contact: contact@lafeuille.app</p>
+<p style="font-size:13px"><b>Data collected</b><br>• Accounts: email address, password (stored securely), role and authorised categories.<br>• Account requests: name, email address and group information entered in the form.<br>• Games: player numbers, names, stats, and logos or photos added by users.<br>• Usage: anonymous counters (demo, live follow).</p>
+<p style="font-size:13px"><b>Where and why</b><br>Data is used only to run LaFeuille. It is not sold or used for advertising. It is hosted by Supabase; emails are sent through Resend; the site is served by GitHub Pages and Cloudflare.</p>
+<p style="font-size:13px"><b>Retention</b><br>Data is kept as long as the account or team is in use, then deleted on request.</p>
+<p style="font-size:13px"><b>Your rights</b><br>You can ask for access to, correction of or deletion of your data (account, player, game) by writing to contact@lafeuille.app.</p>
+<p style="font-size:13px"><b>Minor players</b><br>Some players may be minors. The person entering data must make sure the club and legal guardians agree, enter only what is needed (number, name), and not add a photo without permission. Stats are entered by volunteers and are not official.</p>
+<p style="font-size:11px;opacity:.7">Updated: 25 November 2026</p>`;
+function privOpen(){const en=LANG=='en',d=document.createElement('div');d.className='ov';d.id='privm';d.onclick=e=>{if(e.target===d)privClose();};d.innerHTML='<div class="card" style="max-width:420px"><h2>'+(en?'Privacy':'Confidentialité')+'</h2>'+(en?PRIV_EN:PRIV_FR)+'<button class="p" style="width:100%;margin-top:10px" onclick="privClose()">'+(en?'Close':'Fermer')+'</button></div>';document.body.appendChild(d);}
+function privClose(){const d=document.getElementById('privm');if(d)d.remove();}
 function dlgNo(){S.dlg=null;draw();}
 function askPeriod(p){if(S.duo=='follow'){toast('⏱ Le chrono est tenu par le saisisseur principal');return;}if(p==S.qt)return;ask(`Passer à <b>${PL(p)}</b> ?<br><span class="mut">Vérifie que toutes les stats de ${PL(S.qt)} sont enregistrées : le chrono sera remis à ${mmss(plen(p))}.</span>`,()=>setPeriod(p));}
 function lpS(){if(S.duo=='follow')return;lpF=false;clearTimeout(lpT);lpT=setTimeout(()=>{lpF=true;vib(40);setClock();},600);}
@@ -654,7 +671,7 @@ function doExport(fmt){
     if(we)o+=[LANG=='en'?'Period':'Periode',S.m.team,opn,LANG=='en'?'Margin':'Ecart'].join(';')+'\n'+Object.keys(sf.P).map(q=>[PL(+q),sf.P[q][0],sf.P[q][1],sf.P[q][0]-sf.P[q][1]].join(';')).join('\n')+'\n\n'+[LANG=='en'?'Period':'Periode',LANG=='en'?'Clock':'Chrono',S.m.team,opn,LANG=='en'?'Margin':'Ecart'].join(';')+'\n'+sf.sr.slice(1).map(r=>[PL(r.q),mmss(r.c),r.h,r.a,r.h-r.a].join(';')).join('\n')+'\n\n';
     if(wt)o+=[LANG=='en'?'Team':'Equipe',...H].join(';')+'\n'+rows.map((p,i)=>[tn(p),...R[i]].join(';')).join('\n')+'\n';
     if(ws)o+=(o?'\n':'')+(LANG=='en'?'Team;Player;Shot;Period;x;y':'Equipe;Joueur;Tir;Periode;x;y')+'\n'+shots.map(e=>{const p=S.m.roster.find(p=>K(p)==e.player)||{};return[tn(p),'#'+p.n+' '+dn(p),TL[e.type],PL(e.quarter),e.x,e.y].join(';')}).join('\n');
-    return dl(new Blob(['\ufeff'+o],{type:'text/csv'}),nm+'.csv');
+    o+='\n\n'+(LANG=='en'?'Made with lafeuille.app':'Via lafeuille.app');return dl(new Blob(['\ufeff'+o],{type:'text/csv'}),nm+'.csv');
   }
   const W=1000,rh=28,tm=[0,1].filter(o=>rows.some(p=>!!p.o==!!o)||shots.some(e=>(e.player>=1000)==!!o));
   const th=wt?(R.length+1)*rh+20:0,sh=ws&&tm.length?420:0,eh=we?290:0;
@@ -691,7 +708,7 @@ function doExport(fmt){
     x.font='bold 13px sans-serif';x.fillStyle='#7c5cff';x.fillText('■ '+S.m.team,20,cy+ch+22);x.fillStyle='#f08c00';x.fillText('■ '+opn,20+x.measureText('■ '+S.m.team).width+24,cy+ch+22);
     x.fillStyle='#7a76a3';x.fillText(LANG=='en'?'Top: '+S.m.team+' ahead':'En haut : '+S.m.team+' devant',510,cy+ch+22);
   }
-  c.toBlob(b=>dl(b,nm+'.png'));
+  x.font='13px sans-serif';x.fillStyle='#7a76a3';x.textAlign='right';x.fillText(LANG=='en'?'Made with lafeuille.app':'Via lafeuille.app',W-20,c.height-12);c.toBlob(b=>dl(b,nm+'.png'));
 }
 
 let lastVk='';
@@ -867,7 +884,7 @@ function doSummary(o){
     let nm='#'+p.n+' '+dn(p);while(nm.length>4&&mw('600 '+fs+'px sans-serif',nm)>cw-44-sw-14)nm=nm.slice(0,-2)+'…';
     T(nm,px+20,ty,fs,'#fff','left','600');T(st3,px+cw-20,ty,fs,'#fff','right','800');
   });
-  T('lafeuille.app',W/2,H-45,30,'#9a97b8','center','500');
+  T(LANG=='en'?'Made with lafeuille.app':'Via lafeuille.app',W/2,H-45,30,'#9a97b8','center','500');
   cv.toBlob(b=>{const nm=(S.m.team+'-vs-'+opn+'-resume-'+tn).replace(/\s/g,'_'),f=new File([b],nm+'.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:S.m.team+' vs '+opn}).catch(()=>{});else dl(b,nm+'.png');},'image/png');
 }
 async function tRename(){
@@ -900,7 +917,7 @@ function draw(){
     const st=stats(),fq=n=>`<div style="transform:scale(2.2);transform-origin:top center;margin:8px 0 24px">${fsq(n)}</div>`,nmz='font-size:clamp(18px,4vw,42px);font-weight:700',big='font-size:clamp(70px,22vw,230px);font-weight:800;line-height:1';
     const side=(o,nm,sc)=>{const x=sty(o),c=/^#[0-9a-f]{6}$/i.test(x.c||'')?x.c:(o?'#f08c00':'#7c5cff');return `<div style="flex:1 1 0;min-width:0;border-radius:20px;border-top:12px solid ${c};background:${c}22;padding:10px 6px 0">${x.l?`<img src="${esc(x.l)}" alt="" style="display:block;margin:0 auto 4px;height:clamp(40px,9vw,110px);max-width:80%;object-fit:contain">`:''}<div style="${nmz}">${esc(nm)}</div><div style="${big}">${sc}</div>${fq(tfl(o))}<div style="height:clamp(24px,4vw,48px);font-size:clamp(18px,3.4vw,40px);font-weight:800;color:var(--ko)">${tfl(o?0:1)>=5?'BONUS':''}</div></div>`};
     const ar=arrow();
-    a.innerHTML=`<div style="display:flex;flex-direction:column;min-height:92vh;justify-content:center;text-align:center"><div class="row nw" style="align-items:flex-start;gap:1.5vw">${side(0,S.m.team,st.h)}<div style="flex:0 0 auto;padding:0 1vw"><div style="${nmz}">${PL(S.qt)}</div><div id="oclk" style="font-size:clamp(34px,10vw,120px);font-weight:800;color:${clkCol()}">${mmss(Math.ceil(S.rem))}</div>${ar!=null?`<div style="font-size:clamp(34px,8vw,90px);line-height:1">${ar?'▶':'◀'}</div><div class="mut" style="font-size:clamp(12px,1.6vw,20px)">possession</div>`:''}</div>${side(1,S.m.opp||AD(),st.a)}</div><div class="row nw" style="justify-content:center;margin-top:10px"><button class="nf" onclick="obsLeave()">← Quitter</button><button class="nf" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">⛶ Plein écran</button><button class="nf" onclick="S.view='live';S.tab='box';draw()">📊 Stats</button></div></div>`;return;
+    a.innerHTML=`<div style="display:flex;flex-direction:column;min-height:92vh;justify-content:center;text-align:center"><div class="row nw" style="align-items:flex-start;gap:1.5vw">${side(0,S.m.team,st.h)}<div style="flex:0 0 auto;padding:0 1vw"><div style="${nmz}">${PL(S.qt)}</div><div id="oclk" style="font-size:clamp(34px,10vw,120px);font-weight:800;color:${clkCol()}">${mmss(Math.ceil(S.rem))}</div>${ar!=null?`<div style="font-size:clamp(34px,8vw,90px);line-height:1">${ar?'▶':'◀'}</div><div class="mut" style="font-size:clamp(12px,1.6vw,20px)">possession</div>`:''}</div>${side(1,S.m.opp||AD(),st.a)}</div><div class="row nw" style="justify-content:center;margin-top:10px"><button class="nf" onclick="obsLeave()">← Quitter</button><button class="nf" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">⛶ Plein écran</button><button class="nf" onclick="S.view='live';S.tab='box';draw()">📊 Stats</button></div>${MD()}</div>`;return;
   }
   if(S.view=='trash'){
     const T=TR(),adm=S.role=='admin',n=trN();
@@ -1018,7 +1035,7 @@ function draw(){
     const sec=(o,nm)=>`<div class="card"><div class="row"><b>${esc(nm)}</b><button class="nf good" onclick="saveTeam(${o})">💾 Enregistrer l'équipe</button></div><div class="row" style="margin:6px 0"><button onclick="pullTeam(${o})">🔄 Mettre à jour depuis l'équipe enregistrée</button></div><div class="row" style="margin:6px 0"><button onclick="tplXL()">⬇ Modèle Excel</button><button onclick="S.xo=${o};document.getElementById('xf').click()">📥 Importer Excel</button></div><div class="bubs">${S.m.roster.filter(p=>!!p.o==!!o).sort((a,b)=>a.n-b.n).map(p=>`<button class="bub${p.abs?' ab':''}" onclick="editP(${K(p)},${o})">${av(p)}<b>#${p.n}</b> ${esc(p.name)}<small>${esc(p.first||'')}${p.pos?' · '+p.pos:''}${p.abs?' · absent':''}</small></button>`).join('')}<button class="bub add" onclick="editP(null,${o})">＋</button></div></div>`;
     body=(S.ev.length?'':'<button style="width:100%;margin-bottom:8px" onclick="initStart();S.tab=\'rec\';draw()">📋 Composition de départ</button>')+sec(0,S.m.team)+sec(1,oN)+'<input type="file" id="xf" accept=".xlsx,.xls,.csv" hidden onchange="impXL(this)">';
   }
-  a.innerHTML=head+body+popH()+peH()+exH()+ckH()+dlgH()+(S.demo?demoBar():'');
+  a.innerHTML=head+body+popH()+peH()+exH()+ckH()+dlgH()+(S.demo?demoBar():'')+(S.obs?MD():'');
 }
 document.addEventListener('click',e=>{if(S.view!='live'||e.target.closest('.pl,.st'))return;if(S.sel!=null||S.ps){S.sel=null;S.ps=null;draw();}});
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
@@ -1026,6 +1043,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 /* i18n FR/EN */
 const DICT=new Map(`Connexion=>Log in
 Mot de passe oublié ?=>Forgot password?
+Confidentialité=>Privacy
 👀 Suivre un match en direct (sans compte)=>👀 Follow a live match (no account)
 🎮 Tester par vous-même !=>🎮 Try it yourself!
 📝 Demander mon compte et mes catégories=>📝 Request my account and categories
