@@ -74,10 +74,13 @@ body.lh .g{transform:scaleX(-1)}body.lh .g>*{transform:scaleX(-1)}
 .gt{background:none;border:0;padding:0;text-align:left;color:inherit;cursor:pointer}
 body.bdv #app{max-width:none;padding:0 2vw}.gt h1{margin:.4em 0}
 .pl.ab{background:#8b8fa3;color:#fff;border-color:#8b8fa3}.pl.ab small{color:#fff}.bub.ab{opacity:.45}.pl small{max-width:84px;text-overflow:ellipsis}
+#lg{position:fixed;left:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:15;padding:5px 9px;font-size:12px;border-radius:14px;opacity:.9;box-shadow:0 2px 8px #0003}#lg b{color:var(--ac)}
 </style></head>
 <body><div id="app"></div><div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+let LANG=(()=>{try{return localStorage.lf_lang}catch(e){}})()||((navigator.language||'fr').slice(0,2)=='fr'?'fr':'en');
+const LOC=()=>LANG=='en'?'en-GB':'fr-FR',AD=()=>LANG=='en'?'Opponent':'Adversaire',AD2=()=>LANG=='en'?'Opp.':'Adv.';
 const REC=/type=recovery/.test(location.hash);
 
 const SUPABASE_URL="https://zpcvjfwvehfcfnapzvtp.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwY3ZqZnd2ZWhmY2ZuYXB6dnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NTYzMjksImV4cCI6MjEwNjIzMjMyOX0.-Ix-EpglLNyXt8_Zre2fNmAKuwutN1Ql7ghnhp7Hgq4";
@@ -100,13 +103,13 @@ const ini=f=>(f||'').trim().split(/\s+/)[0].split('-').filter(Boolean).map(x=>x[
 const dn=p=>{const i=ini(p.first);return i?i+' '+(p.name||''):(p.name||'')};
 const parse=(t,o)=>t.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const [n,...r]=l.split(/\s+/);const p={n:parseInt(n),name:r.join(' ')};if(o)p.o=1;return p}).filter(p=>!isNaN(p.n));
 const TL={t2m:'+2 pts',t2x:'2 pts raté',t3m:'+3 pts',t3x:'3 pts raté',lfm:'+LF',lfx:'LF raté',ro:'Rebond off.',rd:'Rebond déf.',ast:'Passe déc.',stl:'Interception',blk:'Contre',tov:'Balle perdue',pf:'Faute',fr:'Faute provoquée'};
-const who=k=>{const p=S.m.roster.find(p=>K(p)==k);return p?`#${p.n} ${dn(p)} (${p.o?(S.m.opp||'Adv.'):S.m.team})`:'joueur retiré'};
-const PL=p=>p>S.m.np?'PR'+(p-S.m.np):'QT'+p;
+const who=k=>{const p=S.m.roster.find(p=>K(p)==k);return p?`#${p.n} ${dn(p)} (${p.o?(S.m.opp||AD2()):S.m.team})`:'joueur retiré'};
+const PL=p=>p>S.m.np?(LANG=='en'?'OT':'PR')+(p-S.m.np):(LANG=='en'?'Q':'QT')+p;
 const plen=p=>p<=S.m.np?S.m.dur:300;
 const start=p=>{let s=0;for(let i=1;i<p;i++)s+=plen(i);return s};
 const tt=(q,c)=>start(q)+plen(q)-c;
 const mmss=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
-const pending=()=>{if(S.demo)return '🎮 démo';const n=Q.i.length+Q.d.length+Q.m.length;return !navigator.onLine?'🔴 hors connexion'+(n?` · ${n} en attente`:''):n?`🟠 ${n} en attente`:'🟢 synchronisé'};
+const pending=()=>tr1(pending0());const pending0=()=>{if(S.demo)return '🎮 démo';const n=Q.i.length+Q.d.length+Q.m.length;return !navigator.onLine?'🔴 hors connexion'+(n?` · ${n} en attente`:''):n?`🟠 ${n} en attente`:'🟢 synchronisé'};
 
 async function sync(){
   if(!S.user)return;
@@ -250,7 +253,7 @@ function pCourt(k){
 function tg(k,n){const a=S[k],i=a.indexOf(n);i>=0?a.splice(i,1):a.push(n);draw();}
 function closeP(){S.panel=null;S.edit=null;draw();}
 let tT=null,lpT=null,lpF=false;
-function toast(m,d){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),d||2200);}
+function toast(m,d){const t=$('toast');t.textContent=tr1(m);t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),d||2200);}
 function ask(msg,fn){S.dlg={msg,fn};draw();}
 function dlgOk(){const f=S.dlg.fn;S.dlg=null;f();draw();}
 function dlgH(){return S.dlg?`<div class="ov"><div class="card"><p>${S.dlg.msg}</p><div class="row"><button onclick="dlgNo()">Annuler</button><button class="p" onclick="dlgOk()">Confirmer</button></div></div></div>`:''}
@@ -291,9 +294,9 @@ function beep(){if(!CFG.snd)return;try{const o=ac.createOscillator(),g=ac.create
 const tfl=sd=>S.ev.filter(e=>e.type=='pf'&&e.quarter==S.qt&&(e.player>=1000)==!!sd).length;
 const bonus=o=>tfl(o?0:1)>=5?'<span style="color:var(--ko);font-weight:800">BONUS</span>':'';
 const arrow=()=>{for(let i=S.ev.length-1;i>=0;i--){const t=S.ev[i].type;if(t=='ar0')return 0;if(t=='ar1')return 1;}return null};
-const ARL=t=>t=='ar0'?'↔ Flèche : '+S.m.team:t=='ar1'?'↔ Flèche : '+(S.m.opp||'Adv.'):'';
-function setArrow(o){if(lock())return;if(arrow()===o)return;add('ar'+o,null);toast('Flèche de possession : '+(o?(S.m.opp||'Adversaire'):S.m.team));draw();}
-function toPop(sd){pop({t:'Temps mort — '+(sd?S.m.opp||'Adversaire':S.m.team),sk:'Annuler',opts:[['30 s',()=>timeout(sd,30)],['60 s',()=>timeout(sd,60)]]});}
+const ARL=t=>t=='ar0'?'↔ Flèche : '+S.m.team:t=='ar1'?'↔ Flèche : '+(S.m.opp||AD2()):'';
+function setArrow(o){if(lock())return;if(arrow()===o)return;add('ar'+o,null);toast('Flèche de possession : '+(o?(S.m.opp||AD()):S.m.team));draw();}
+function toPop(sd){pop({t:'Temps mort — '+(sd?S.m.opp||AD():S.m.team),sk:'Annuler',opts:[['30 s',()=>timeout(sd,30)],['60 s',()=>timeout(sd,60)]]});}
 function timeout(sd,n){stopClock();add(sd?'toa':'to',null);S.to={end:Date.now()+n*1000};toast('⏱ Temps mort '+n+' s');}
 setInterval(()=>{if(!S.to)return;const r=Math.ceil((S.to.end-Date.now())/1000);if(r<=0){S.to=null;beep();vib(400);draw();return;}const b=$('tob');if(b)b.textContent='⏱ Temps mort — '+r+' s';},300);
 function scoreCard(){
@@ -302,7 +305,7 @@ function scoreCard(){
   const tot=Math.max(start(S.m.np+1),sr[sr.length-1][0],1),M=Math.max(5,...sr.map(x=>Math.abs(x[1])));
   const pts=sr.map(x=>(x[0]/tot*300).toFixed(1)+','+(50-x[1]/M*45).toFixed(1)).join(' ');
   const seps=Array.from({length:S.m.np-1},(_,i)=>`<line x1="${start(i+2)/tot*300}" x2="${start(i+2)/tot*300}" y1="0" y2="100" stroke="var(--bd)"/>`).join('');
-  return `<div class="card"><b>Score par période</b><table><tr><th></th>${Object.keys(P).map(q=>`<th>${PL(+q)}</th>`).join('')}<th>Total</th></tr><tr><td>${esc(S.m.team)}</td>${Object.values(P).map(x=>`<td>${x[0]}</td>`).join('')}<td><b>${h}</b></td></tr><tr><td>${esc(S.m.opp||'Adversaire')}</td>${Object.values(P).map(x=>`<td>${x[1]}</td>`).join('')}<td><b>${a}</b></td></tr></table>
+  return `<div class="card"><b>Score par période</b><table><tr><th></th>${Object.keys(P).map(q=>`<th>${PL(+q)}</th>`).join('')}<th>Total</th></tr><tr><td>${esc(S.m.team)}</td>${Object.values(P).map(x=>`<td>${x[0]}</td>`).join('')}<td><b>${h}</b></td></tr><tr><td>${esc(S.m.opp||AD())}</td>${Object.values(P).map(x=>`<td>${x[1]}</td>`).join('')}<td><b>${a}</b></td></tr></table>
   <div class="mut" style="margin-top:8px">Écart de score au fil du match (en haut : ${esc(S.m.team)} devant)</div><svg viewBox="0 0 300 100" style="width:100%;background:var(--bg);border-radius:10px"><line x1="0" x2="300" y1="50" y2="50" stroke="var(--bd)"/>${seps}<polyline fill="none" stroke="#7c5cff" stroke-width="1.6" points="${pts}"/></svg></div>`;
 }
 function scoreFlow(){
@@ -313,7 +316,7 @@ function scoreFlow(){
 function lineCard(st){
   const nm=x=>{const p=S.m.roster.find(p=>K(p)==x);return p?(p.name?dn(p):'#'+p.n):'?'};
   const box=(sd,t)=>{const R=st.lu.filter(l=>l.sd==sd&&l.k.split(',').length==5).sort((x,y)=>y.pm-x.pm);return R.length?`<div style="margin-top:8px"><b>${esc(t)}</b></div>${R.map(l=>`<div class="row nw" style="border-bottom:1px solid var(--bd);padding:5px 0"><span style="flex:5;font-size:13px">${l.k.split(',').map(nm).map(esc).join(', ')}</span><b style="text-align:right">${l.pm>0?'+':''}${l.pm}</b></div>`).join('')}`:''};
-  return `<div class="card"><b>+/- par cinq majeur</b>${box(0,S.m.team)||'<p class="mut">Aucun cinq complet pour le moment.</p>'}${box(1,S.m.opp||'Adversaire')}</div>`;
+  return `<div class="card"><b>+/- par cinq majeur</b>${box(0,S.m.team)||'<p class="mut">Aucun cinq complet pour le moment.</p>'}${box(1,S.m.opp||AD())}</div>`;
 }
 async function fetchAll(ids){let all=[],i=0;for(;;){const r=await sb.from('events').select('*').in('match_id',ids).order('ts').order('id').range(i,i+999);if(r.error||!r.data)return null;all=all.concat(r.data);if(r.data.length<1000)break;i+=1000;}return all;}
 let ckT=null,ot=null,ocode='';
@@ -395,7 +398,7 @@ async function ssLoad(){
     S.m=m;S.ev=(S.evc[m.id]||[]).slice().sort((x,y)=>x.ts-y.ts);const le=S.ev[S.ev.length-1];S.qt=le?le.quarter:1;S.rem=le?le.clock:0;
     const st=stats(),me=m.team==q.team?0:1,mine=me?st.a:st.h,his=me?st.h:st.a;
     R.pf+=mine;R.pa+=his;if(mine>his)R.W++;else if(mine<his)R.L++;
-    const TT={pts:mine,reb:0,ast:0,stl:0,tov:0,pf:0,t2m:0,t2x:0,t3m:0,t3x:0,lfm:0,lfx:0};st.rows.filter(p=>p.o==me).forEach(p=>Object.keys(TT).forEach(f=>{if(f!='pts')TT[f]+=p[f]||0}));R.g.push({d:m.created_at,adv:me?m.team:(m.opp||'Adversaire'),pf:mine,pa:his,T:TT});
+    const TT={pts:mine,reb:0,ast:0,stl:0,tov:0,pf:0,t2m:0,t2x:0,t3m:0,t3x:0,lfm:0,lfx:0};st.rows.filter(p=>p.o==me).forEach(p=>Object.keys(TT).forEach(f=>{if(f!='pts')TT[f]+=p[f]||0}));R.g.push({d:m.created_at,adv:me?m.team:(m.opp||AD()),pf:mine,pa:his,T:TT});
     st.rows.filter(p=>p.o==me&&(p.tim>0||p.pts||p.reb||p.ast||p.stl||p.blk||p.tov||p.pf||p.t2x||p.t3x||p.lfx)).forEach(p=>{
       const pr=m.roster.find(r=>K(r)==p.k)||{},id=pr.pid||q.team+'|'+p.n+'|'+p.name;
       const g=P[id]=P[id]||{id,gp:0,g:[]};
@@ -633,32 +636,32 @@ async function saveTeam(o){if(S.demo){toast('💾 Équipes enregistrées : dispo
   if(r.error){toast('Erreur : '+r.error.message);return;}
   {const ex=S.teams.find(t=>t.name==nm)||{};S.teams=S.teams.filter(t=>t.name!=nm).concat([{...ex,name:nm,players}]);}toast('💾 Équipe « '+nm+' » enregistrée');
 }
-function shotCard(o){const ev=S.ev.filter(e=>SH.includes(e.type)&&e.x!=null&&(e.player>=1000)==!!o);return `<div class="card"><b>Tirs — ${esc(o?S.m.opp||'Adversaire':S.m.team)}</b> <span class="mut">● réussi ○ raté (${ev.length})</span><svg viewBox="0 0 100 94" style="width:100%;color:var(--tx)">${COURT}${dots(ev)}</svg></div>`;}
+function shotCard(o){const ev=S.ev.filter(e=>SH.includes(e.type)&&e.x!=null&&(e.player>=1000)==!!o);return `<div class="card"><b>Tirs — ${esc(o?S.m.opp||AD():S.m.team)}</b> <span class="mut">● réussi ○ raté (${ev.length})</span><svg viewBox="0 0 100 94" style="width:100%;color:var(--tx)">${COURT}${dots(ev)}</svg></div>`;}
 function exH(){if(!S.ex)return '';
-  const V=new Set(stats().rows.filter(vis).map(p=>p.k)),T=o=>{const rs=S.m.roster.filter(p=>!!p.o==o&&V.has(K(p)));return rs.length?`<label><input type="checkbox" checked onchange="document.querySelectorAll('.px${o?1:0}').forEach(c=>c.checked=this.checked)"><b>Toute l'équipe ${esc(o?S.m.opp||'Adversaire':S.m.team)}</b></label>${rs.map(p=>`<label style="margin:2px 0 2px 18px"><input class="pxk px${o?1:0}" type="checkbox" checked value="${K(p)}">#${p.n} ${esc(dn(p))}</label>`).join('')}`:''};
-  return `<div class="ov"><div class="card"><h2>Exporter</h2><label>Période<select id="xp"><option value="0">Match complet</option>${Array.from({length:S.m.np+2},(_,i)=>`<option value="${i+1}">${PL(i+1)}</option>`).join('')}</select></label><label><input type="checkbox" id="xt" checked>Tableau de stats</label><label><input type="checkbox" id="xs" checked>Carte des tirs</label><label><input type="checkbox" id="xe" checked>Courbes du score et de l'écart</label><hr>${T(0)}${T(1)}<button class="p" style="width:100%;margin-top:10px" onclick="doSummary(0)">🖼️ Résumé à partager · ${esc(S.m.team)}</button><button class="p" style="width:100%;margin-top:6px" onclick="doSummary(1)">🖼️ Résumé à partager · ${esc(S.m.opp||'Adversaire')}</button><div class="row" style="margin-top:12px"><button onclick="S.ex=false;draw()">Fermer</button><button class="p" onclick="doExport('csv')">CSV</button><button class="p" onclick="doExport('png')">PNG</button></div></div></div>`;}
+  const V=new Set(stats().rows.filter(vis).map(p=>p.k)),T=o=>{const rs=S.m.roster.filter(p=>!!p.o==o&&V.has(K(p)));return rs.length?`<label><input type="checkbox" checked onchange="document.querySelectorAll('.px${o?1:0}').forEach(c=>c.checked=this.checked)"><b>Toute l'équipe ${esc(o?S.m.opp||AD():S.m.team)}</b></label>${rs.map(p=>`<label style="margin:2px 0 2px 18px"><input class="pxk px${o?1:0}" type="checkbox" checked value="${K(p)}">#${p.n} ${esc(dn(p))}</label>`).join('')}`:''};
+  return `<div class="ov"><div class="card"><h2>Exporter</h2><label>Période<select id="xp"><option value="0">Match complet</option>${Array.from({length:S.m.np+2},(_,i)=>`<option value="${i+1}">${PL(i+1)}</option>`).join('')}</select></label><label><input type="checkbox" id="xt" checked>Tableau de stats</label><label><input type="checkbox" id="xs" checked>Carte des tirs</label><label><input type="checkbox" id="xe" checked>Courbes du score et de l'écart</label><hr>${T(0)}${T(1)}<button class="p" style="width:100%;margin-top:10px" onclick="doSummary(0)">🖼️ Résumé à partager · ${esc(S.m.team)}</button><button class="p" style="width:100%;margin-top:6px" onclick="doSummary(1)">🖼️ Résumé à partager · ${esc(S.m.opp||AD())}</button><div class="row" style="margin-top:12px"><button onclick="S.ex=false;draw()">Fermer</button><button class="p" onclick="doExport('csv')">CSV</button><button class="p" onclick="doExport('png')">PNG</button></div></div></div>`;}
 function dl(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();}
 function doExport(fmt){
   const per=parseInt($('xp').value)||0,wt=$('xt').checked,ws=$('xs').checked,we=$('xe').checked,ks=[...document.querySelectorAll('.pxk:checked')].map(c=>+c.value);
   if(((wt||ws)&&!ks.length)||!(wt||ws||we)){toast('Choisis des joueurs et un contenu');return;}
-  const rows=stats(per).rows.filter(p=>ks.includes(p.k)),tn=p=>p.o?(S.m.opp||'Adversaire'):S.m.team;
+  const rows=stats(per).rows.filter(p=>ks.includes(p.k)),tn=p=>p.o?(S.m.opp||AD()):S.m.team;
   const shots=S.ev.filter(e=>SH.includes(e.type)&&e.x!=null&&ks.includes(e.player)&&(!per||e.quarter==per));
-  const nm=(S.m.team+'-vs-'+(S.m.opp||'adv')+'-'+(per?PL(per):'match')).replace(/\s/g,'_'),opn=S.m.opp||'Adversaire',sf=scoreFlow();
-  const H=['Joueur','TIM','PTS','REB','PD','INT','CT','BP','F','FP','2P','3P','LF','+/-','EVAL'];
+  const nm=(S.m.team+'-vs-'+(S.m.opp||'adv')+'-'+(per?PL(per):'match')).replace(/\s/g,'_'),opn=S.m.opp||AD(),sf=scoreFlow();
+  const H=['Joueur','TIM','PTS','REB','PD','INT','CT','BP','F','FP','2P','3P','LF','+/-','EVAL'].map(tr1);
   const R=rows.map(p=>['#'+p.n+' '+dn(p),mmss(p.tim),p.pts,p.reb,p.ast,p.stl,p.blk,p.tov,p.pf,p.fr,p.t2m+'/'+(p.t2m+p.t2x),p.t3m+'/'+(p.t3m+p.t3x),p.lfm+'/'+(p.lfm+p.lfx),p.pm,EV(p)]);
   if(fmt=='csv'){
-    let o='Match;'+S.m.team+' vs '+opn+'\nScore final;'+S.m.team+' '+sf.h+' - '+sf.a+' '+opn+'\n'+(per&&sf.P[per]?'Score '+PL(per)+';'+S.m.team+' '+sf.P[per][0]+' - '+sf.P[per][1]+' '+opn+'\n':'')+'\n';
-    if(we)o+=['Periode',S.m.team,opn,'Ecart'].join(';')+'\n'+Object.keys(sf.P).map(q=>[PL(+q),sf.P[q][0],sf.P[q][1],sf.P[q][0]-sf.P[q][1]].join(';')).join('\n')+'\n\n'+['Periode','Chrono',S.m.team,opn,'Ecart'].join(';')+'\n'+sf.sr.slice(1).map(r=>[PL(r.q),mmss(r.c),r.h,r.a,r.h-r.a].join(';')).join('\n')+'\n\n';
-    if(wt)o+=['Equipe',...H].join(';')+'\n'+rows.map((p,i)=>[tn(p),...R[i]].join(';')).join('\n')+'\n';
-    if(ws)o+=(o?'\n':'')+'Equipe;Joueur;Tir;Periode;x;y\n'+shots.map(e=>{const p=S.m.roster.find(p=>K(p)==e.player)||{};return[tn(p),'#'+p.n+' '+dn(p),TL[e.type],PL(e.quarter),e.x,e.y].join(';')}).join('\n');
+    let o=tr1('Match')+';'+S.m.team+' vs '+opn+'\n'+tr1('Score final')+';'+S.m.team+' '+sf.h+' - '+sf.a+' '+opn+'\n'+(per&&sf.P[per]?'Score '+PL(per)+';'+S.m.team+' '+sf.P[per][0]+' - '+sf.P[per][1]+' '+opn+'\n':'')+'\n';
+    if(we)o+=[LANG=='en'?'Period':'Periode',S.m.team,opn,LANG=='en'?'Margin':'Ecart'].join(';')+'\n'+Object.keys(sf.P).map(q=>[PL(+q),sf.P[q][0],sf.P[q][1],sf.P[q][0]-sf.P[q][1]].join(';')).join('\n')+'\n\n'+[LANG=='en'?'Period':'Periode',LANG=='en'?'Clock':'Chrono',S.m.team,opn,LANG=='en'?'Margin':'Ecart'].join(';')+'\n'+sf.sr.slice(1).map(r=>[PL(r.q),mmss(r.c),r.h,r.a,r.h-r.a].join(';')).join('\n')+'\n\n';
+    if(wt)o+=[LANG=='en'?'Team':'Equipe',...H].join(';')+'\n'+rows.map((p,i)=>[tn(p),...R[i]].join(';')).join('\n')+'\n';
+    if(ws)o+=(o?'\n':'')+(LANG=='en'?'Team;Player;Shot;Period;x;y':'Equipe;Joueur;Tir;Periode;x;y')+'\n'+shots.map(e=>{const p=S.m.roster.find(p=>K(p)==e.player)||{};return[tn(p),'#'+p.n+' '+dn(p),TL[e.type],PL(e.quarter),e.x,e.y].join(';')}).join('\n');
     return dl(new Blob(['\ufeff'+o],{type:'text/csv'}),nm+'.csv');
   }
   const W=1000,rh=28,tm=[0,1].filter(o=>rows.some(p=>!!p.o==!!o)||shots.some(e=>(e.player>=1000)==!!o));
   const th=wt?(R.length+1)*rh+20:0,sh=ws&&tm.length?420:0,eh=we?290:0;
   const c=document.createElement('canvas');c.width=W;c.height=100+th+sh+eh;const x=c.getContext('2d');
   x.fillStyle='#fff';x.fillRect(0,0,W,c.height);x.fillStyle='#1b1740';x.font='bold 22px sans-serif';
-  x.fillText(S.m.team+' vs '+(S.m.opp||'Adversaire')+' — '+$('xp').selectedOptions[0].text,20,38);
-  x.font='bold 20px sans-serif';x.fillStyle='#7c5cff';x.fillText('Score final : '+S.m.team+' '+sf.h+' – '+sf.a+' '+opn+(per&&sf.P[per]?'   ·   '+PL(per)+' : '+sf.P[per][0]+' – '+sf.P[per][1]:''),20,66);
+  x.fillText(S.m.team+' vs '+(S.m.opp||AD())+' — '+$('xp').selectedOptions[0].text,20,38);
+  x.font='bold 20px sans-serif';x.fillStyle='#7c5cff';x.fillText((LANG=='en'?'Final score: ':'Score final : ')+S.m.team+' '+sf.h+' – '+sf.a+' '+opn+(per&&sf.P[per]?'   ·   '+PL(per)+' : '+sf.P[per][0]+' – '+sf.P[per][1]:''),20,66);
   let y=84;const cw=(W-290)/14;
   if(wt){
     x.font='bold 14px sans-serif';x.fillStyle='#7c5cff';x.fillRect(10,y,W-20,rh);x.fillStyle='#fff';
@@ -670,7 +673,7 @@ function doExport(fmt){
     x.strokeRect(.4,.4,99.2,93.2);x.strokeRect(34,56,32,37.6);x.beginPath();x.arc(50,56,12,0,7);x.stroke();x.beginPath();x.arc(50,83.5,2.5,0,7);x.stroke();
     x.stroke(new Path2D('M6 93.6V65.6A47.5 47.5 0 0 1 94 65.6V93.6M44 88.5h12M42 83.5A8 8 0 0 1 58 83.5'));
     shots.filter(e=>(e.player>=1000)==!!o).forEach(e=>{if(e.type[2]=='m'){x.fillStyle='#12b886';x.beginPath();x.arc(e.x,e.y,1.8,0,7);x.fill();}else{x.strokeStyle='#f0555e';x.lineWidth=.9;x.beginPath();x.arc(e.x,e.y,1.7,0,7);x.stroke();}});
-    x.restore();x.fillStyle='#1b1740';x.font='bold 16px sans-serif';x.fillText(o?S.m.opp||'Adversaire':S.m.team,ox,y+16);
+    x.restore();x.fillStyle='#1b1740';x.font='bold 16px sans-serif';x.fillText(o?S.m.opp||AD():S.m.team,ox,y+16);
   });
   if(we){
     const cy=y+sh+30,tot=Math.max(start(S.m.np+1),sf.sr[sf.sr.length-1].t,1),cw2=470,ch=200,mx=Math.max(10,Math.ceil(Math.max(sf.h,sf.a)/10)*10),dm=Math.max(5,...sf.sr.map(r=>Math.abs(r.h-r.a)));
@@ -683,10 +686,10 @@ function doExport(fmt){
       x.fillStyle='#7a76a3';x.fillText(String(hi),ox+4,cy+13);x.fillText(String(lo),ox+4,cy+ch-18);
       sers.forEach(s=>{x.strokeStyle=s.c;x.lineWidth=2.5;x.beginPath();sf.sr.forEach((r,i)=>{const px=X(r.t);if(!i)x.moveTo(px,Y(s.f(r)));else{x.lineTo(px,Y(s.f(sf.sr[i-1])));x.lineTo(px,Y(s.f(r)));}});x.stroke();});
     };
-    plot(20,'Évolution du score',0,mx,[{c:'#7c5cff',f:r=>r.h},{c:'#f08c00',f:r=>r.a}]);
-    plot(510,'Écart de score (final '+(sf.h-sf.a>0?'+':'')+(sf.h-sf.a)+')',-dm,dm,[{c:'#7c5cff',f:r=>r.h-r.a}]);
+    plot(20,tr1('Évolution du score'),0,mx,[{c:'#7c5cff',f:r=>r.h},{c:'#f08c00',f:r=>r.a}]);
+    plot(510,(LANG=='en'?'Score margin (final ':'Écart de score (final ')+(sf.h-sf.a>0?'+':'')+(sf.h-sf.a)+')',-dm,dm,[{c:'#7c5cff',f:r=>r.h-r.a}]);
     x.font='bold 13px sans-serif';x.fillStyle='#7c5cff';x.fillText('■ '+S.m.team,20,cy+ch+22);x.fillStyle='#f08c00';x.fillText('■ '+opn,20+x.measureText('■ '+S.m.team).width+24,cy+ch+22);
-    x.fillStyle='#7a76a3';x.fillText('En haut : '+S.m.team+' devant',510,cy+ch+22);
+    x.fillStyle='#7a76a3';x.fillText(LANG=='en'?'Top: '+S.m.team+' ahead':'En haut : '+S.m.team+' devant',510,cy+ch+22);
   }
   c.toBlob(b=>dl(b,nm+'.png'));
 }
@@ -825,7 +828,7 @@ function usageH(){
 function ssCmp(i){const c=S.ss.cmp||(S.ss.cmp=[]),k=c.indexOf(i);if(k>=0)c.splice(k,1);else{if(c.length==2)c.shift();c.push(i);}draw();}
 function teamCmpH(q){
   const g=(q.rec&&q.rec.g)||[];if(!g.length)return '';
-  const dt=x=>new Date(x.d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}),c=q.cmp||[],mx=Math.max(1,...g.map(x=>Math.abs(x.pf-x.pa))),w=300/g.length;
+  const dt=x=>new Date(x.d).toLocaleDateString(LOC(),{day:'2-digit',month:'2-digit'}),c=q.cmp||[],mx=Math.max(1,...g.map(x=>Math.abs(x.pf-x.pa))),w=300/g.length;
   const bars=g.map((x,i)=>{const e=x.pf-x.pa,h=Math.abs(e)/mx*40;return `<rect x="${i*w+w*.2}" y="${e>=0?50-h:50}" width="${w*.6}" height="${Math.max(1,h)}" rx="2" fill="${e>=0?'#2eb872':'#e5484d'}"/>`;}).join('');
   const rows=g.map((x,i)=>`<div class="row nw" onclick="ssCmp(${i})" style="padding:5px 0;border-bottom:1px solid var(--bd);cursor:pointer;${c.includes(i)?'background:var(--bd)':''}"><span class="mut nf" style="width:52px">${dt(x)}</span><span>vs ${esc(x.adv)}</span><span style="text-align:right;flex:2"><b>${x.pf}–${x.pa}</b> ${x.pf>x.pa?'V':x.pf<x.pa?'D':'N'}</span></div>`).join('');
   let cmp='';
@@ -836,13 +839,13 @@ function teamCmpH(q){
   return `<div class="card"><b>Matchs de l’équipe</b><svg viewBox="0 0 300 100" style="width:100%;margin-top:6px"><line x1="0" x2="300" y1="50" y2="50" stroke="currentColor" opacity=".3"/>${bars}</svg><div class="mut">Écart de points par match (vert : victoire). Touchez deux matchs pour les comparer.</div>${rows}${cmp}</div>`;
 }
 function doSummary(o){
-  const sf=scoreFlow(),st=stats(),W=1080,H=1350,cv=document.createElement('canvas'),opn=S.m.opp||'Adversaire',tn=o?opn:S.m.team,cut=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+  const sf=scoreFlow(),st=stats(),W=1080,H=1350,cv=document.createElement('canvas'),opn=S.m.opp||AD(),tn=o?opn:S.m.team,cut=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
   cv.width=W;cv.height=H;const x=cv.getContext('2d');
   const gr=x.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#1b1740');gr.addColorStop(1,'#0c0b1d');x.fillStyle=gr;x.fillRect(0,0,W,H);
-  const T=(t,px,py,sz,col,al,wt)=>{x.font=(wt||'700')+' '+sz+'px sans-serif';x.fillStyle=col;x.textAlign=al||'left';x.fillText(t,px,py);};
+  const T=(t,px,py,sz,col,al,wt)=>{x.font=(wt||'700')+' '+sz+'px sans-serif';x.fillStyle=col;x.textAlign=al||'left';x.fillText(tr1(t),px,py);};
   const c0=sty(0).c||'#7c5cff',c1=sty(1).c||'#e5484d',col=o?c1:c0;
   T('🏀 LaFeuille',60,90,40,'#b9a8ff');
-  T(new Date(S.m.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),W-60,90,34,'#9a97b8','right','500');
+  T(new Date(S.m.created_at).toLocaleDateString(LOC(),{day:'numeric',month:'long',year:'numeric'}),W-60,90,34,'#9a97b8','right','500');
   T(cut(S.m.team,14),270,235,56,'#fff','center');T(cut(opn,14),810,235,56,'#fff','center');
   x.fillStyle=c0;x.fillRect(110,258,320,10);x.fillStyle=c1;x.fillRect(650,258,320,10);
   T(sf.h+' - '+sf.a,W/2,470,200,'#fff','center','800');
@@ -897,11 +900,11 @@ function draw(){
     const st=stats(),fq=n=>`<div style="transform:scale(2.2);transform-origin:top center;margin:8px 0 24px">${fsq(n)}</div>`,nmz='font-size:clamp(18px,4vw,42px);font-weight:700',big='font-size:clamp(70px,22vw,230px);font-weight:800;line-height:1';
     const side=(o,nm,sc)=>{const x=sty(o),c=/^#[0-9a-f]{6}$/i.test(x.c||'')?x.c:(o?'#f08c00':'#7c5cff');return `<div style="flex:1 1 0;min-width:0;border-radius:20px;border-top:12px solid ${c};background:${c}22;padding:10px 6px 0">${x.l?`<img src="${esc(x.l)}" alt="" style="display:block;margin:0 auto 4px;height:clamp(40px,9vw,110px);max-width:80%;object-fit:contain">`:''}<div style="${nmz}">${esc(nm)}</div><div style="${big}">${sc}</div>${fq(tfl(o))}<div style="height:clamp(24px,4vw,48px);font-size:clamp(18px,3.4vw,40px);font-weight:800;color:var(--ko)">${tfl(o?0:1)>=5?'BONUS':''}</div></div>`};
     const ar=arrow();
-    a.innerHTML=`<div style="display:flex;flex-direction:column;min-height:92vh;justify-content:center;text-align:center"><div class="row nw" style="align-items:flex-start;gap:1.5vw">${side(0,S.m.team,st.h)}<div style="flex:0 0 auto;padding:0 1vw"><div style="${nmz}">${PL(S.qt)}</div><div id="oclk" style="font-size:clamp(34px,10vw,120px);font-weight:800;color:${clkCol()}">${mmss(Math.ceil(S.rem))}</div>${ar!=null?`<div style="font-size:clamp(34px,8vw,90px);line-height:1">${ar?'▶':'◀'}</div><div class="mut" style="font-size:clamp(12px,1.6vw,20px)">possession</div>`:''}</div>${side(1,S.m.opp||'Adversaire',st.a)}</div><div class="row nw" style="justify-content:center;margin-top:10px"><button class="nf" onclick="obsLeave()">← Quitter</button><button class="nf" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">⛶ Plein écran</button><button class="nf" onclick="S.view='live';S.tab='box';draw()">📊 Stats</button></div></div>`;return;
+    a.innerHTML=`<div style="display:flex;flex-direction:column;min-height:92vh;justify-content:center;text-align:center"><div class="row nw" style="align-items:flex-start;gap:1.5vw">${side(0,S.m.team,st.h)}<div style="flex:0 0 auto;padding:0 1vw"><div style="${nmz}">${PL(S.qt)}</div><div id="oclk" style="font-size:clamp(34px,10vw,120px);font-weight:800;color:${clkCol()}">${mmss(Math.ceil(S.rem))}</div>${ar!=null?`<div style="font-size:clamp(34px,8vw,90px);line-height:1">${ar?'▶':'◀'}</div><div class="mut" style="font-size:clamp(12px,1.6vw,20px)">possession</div>`:''}</div>${side(1,S.m.opp||AD(),st.a)}</div><div class="row nw" style="justify-content:center;margin-top:10px"><button class="nf" onclick="obsLeave()">← Quitter</button><button class="nf" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">⛶ Plein écran</button><button class="nf" onclick="S.view='live';S.tab='box';draw()">📊 Stats</button></div></div>`;return;
   }
   if(S.view=='trash'){
     const T=TR(),adm=S.role=='admin',n=trN();
-    const row=(k,i,lab,x)=>`<div class="row nw" style="align-items:center;margin-top:8px"><span style="flex:3">${lab}<br><span class="mut">supprimé le ${new Date(x.deleted_at).toLocaleString('fr-FR')}</span></span><button class="nf" onclick="trRestore('${k}',${i})">♻️ Restaurer</button><button class="nf" onclick="trPurge('${k}',${i})">🗑</button></div>`;
+    const row=(k,i,lab,x)=>`<div class="row nw" style="align-items:center;margin-top:8px"><span style="flex:3">${lab}<br><span class="mut">supprimé le ${new Date(x.deleted_at).toLocaleString(LOC())}</span></span><button class="nf" onclick="trRestore('${k}',${i})">♻️ Restaurer</button><button class="nf" onclick="trPurge('${k}',${i})">🗑</button></div>`;
     const sec=(t,h)=>h?`<div class="card"><b>${t}</b>${h}</div>`:'';
     let inner;
     if(S.trOn===false)inner=`<div class="card"><b>La corbeille n'est pas encore activée</b><p class="mut">Une seule fois : ouvre ton projet <b>Supabase</b> → menu <b>SQL Editor</b> → colle le texte ci-dessous → clique sur <b>Run</b>. Reviens ensuite ici et touche « Revérifier ».</p><pre style="white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:8px">${TRSQL}</pre><div class="row"><button onclick="copySql()">📋 Copier le SQL</button><button class="p" onclick="openTrash()">🔄 Revérifier</button></div></div>`;
@@ -923,10 +926,10 @@ function draw(){
     if(!A)b='<p class="mut">Chargement…</p>';
     else if(q.pl!=null){
       const p=A[q.pl],v=m=>p.g.map(x=>x[m]),mx=Math.max(1,...v(q.met)),w=300/p.g.length;
-      const bars=v(q.met).map((x,i)=>{const h=Math.max(0,x)/mx*80;return `<rect x="${i*w+w*.2}" y="${95-h}" width="${w*.6}" height="${h}" rx="3" fill="#7c5cff"/><text x="${i*w+w/2}" y="${90-h}" font-size="9" text-anchor="middle" fill="currentColor">${x}</text><text x="${i*w+w/2}" y="110" font-size="8" text-anchor="middle" fill="currentColor" opacity=".6">${new Date(p.g[i].d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</text>`}).join('');
+      const bars=v(q.met).map((x,i)=>{const h=Math.max(0,x)/mx*80;return `<rect x="${i*w+w*.2}" y="${95-h}" width="${w*.6}" height="${h}" rx="3" fill="#7c5cff"/><text x="${i*w+w/2}" y="${90-h}" font-size="9" text-anchor="middle" fill="currentColor">${x}</text><text x="${i*w+w/2}" y="110" font-size="8" text-anchor="middle" fill="currentColor" opacity=".6">${new Date(p.g[i].d).toLocaleDateString(LOC(),{day:'2-digit',month:'2-digit'})}</text>`}).join('');
       b=`<div class="card"><div class="row nw" style="align-items:center">${av2(p.photo,p.name,56)}<h2 style="flex:3">#${p.n} ${esc(p.name)} ${esc(p.first)}</h2></div><div class="mut">${p.pos||'poste ?'} · ${p.gp} match${p.gp>1?'s':''} · ${esc(q.team)} · ${esc(q.season||'toutes saisons')}</div><div class="bubs">${[['PTS',avg(p,'pts')],['REB',avg(p,'reb')],['PD',avg(p,'ast')],['EVAL',avg(p,'eval')],['MIN',mmss(p.tim/p.gp)],['2P',pcn(p.t2m,p.t2m+p.t2x)],['3P',pcn(p.t3m,p.t3m+p.t3x)],['LF',pcn(p.lfm,p.lfm+p.lfx)]].map(x=>`<div class="bub"><small>${x[0]}</small><b style="font-size:20px">${x[1]}</b></div>`).join('')}</div></div>
       <div class="card"><div class="row">${['pts','reb','ast','eval'].map(m=>`<button class="${q.met==m?'p':''}" onclick="S.ss.met='${m}';draw()">${m.toUpperCase()}</button>`).join('')}</div><svg viewBox="0 0 300 118" style="width:100%;color:var(--tx);margin-top:8px">${bars}</svg></div>
-      <div class="card"><b>Matchs</b>${p.g.slice().reverse().map(x=>`<div class="row nw" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span class="mut nf" style="width:52px">${new Date(x.d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span><span>vs ${esc(x.adv)}</span><span style="text-align:right;flex:2">${x.pts} pts · ${x.reb} reb · ${x.ast} pd · éval ${x.eval}</span></div>`).join('')}</div>`;
+      <div class="card"><b>Matchs</b>${p.g.slice().reverse().map(x=>`<div class="row nw" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span class="mut nf" style="width:52px">${new Date(x.d).toLocaleDateString(LOC(),{day:'2-digit',month:'2-digit'})}</span><span>vs ${esc(x.adv)}</span><span style="text-align:right;flex:2">${x.pts} pts · ${x.reb} reb · ${x.ast} pd · éval ${x.eval}</span></div>`).join('')}</div>`;
     }else if(!A.length)b='<p class="mut">Aucun match comptabilisé pour cette sélection.</p>';
     else b=`<div class="card"><b>${esc(q.team)}</b> · ${q.rec.n} match${q.rec.n>1?'s':''} · ${q.rec.W} V – ${q.rec.L} D · ${(q.rec.pf/q.rec.n).toFixed(1)} pts marqués / ${(q.rec.pa/q.rec.n).toFixed(1)} encaissés</div><div class="card" style="overflow-x:auto"><table><tr><th>Joueur</th><th>MJ</th><th>MIN</th><th>PTS</th><th>REB</th><th>PD</th><th>INT</th><th>CT</th><th>BP</th><th>2P</th><th>3P</th><th>LF</th><th>EVAL</th></tr>${A.map((p,i)=>`<tr onclick="S.ss.pl=${i};draw()" style="cursor:pointer"><td>#${p.n} ${esc(dn(p))}</td><td>${p.gp}</td><td>${mmss(p.tim/p.gp)}</td><td><b>${avg(p,'pts')}</b></td><td>${avg(p,'reb')}</td><td>${avg(p,'ast')}</td><td>${(p.stl/p.gp).toFixed(1)}</td><td>${(p.blk/p.gp).toFixed(1)}</td><td>${(p.tov/p.gp).toFixed(1)}</td><td>${pcn(p.t2m,p.t2m+p.t2x)}</td><td>${pcn(p.t3m,p.t3m+p.t3x)}</td><td>${pcn(p.lfm,p.lfm+p.lfx)}</td><td>${avg(p,'eval')}</td></tr>`).join('')}</table><p class="mut">Moyennes par match. Touche un joueur pour sa fiche.</p></div>${teamCmpH(q)}`;
     a.innerHTML=hd+(q.pl!=null?'':flt)+b;return;
@@ -956,20 +959,20 @@ function draw(){
   if(S.view=='home'){
     a.innerHTML=`<div class="row">${gtitle()}<button class="nf" onclick="S.view='teams';draw()">👥 Équipes</button><button class="nf" onclick="openSS()">📊 Saisons</button><button class="nf" onclick="S.view='cfg';draw()">⚙️</button><button class="nf bad" onclick="logout()">Logout</button></div>
     ${S.off?'<p class="mut" style="text-align:center">📴 Hors connexion — données enregistrées sur cet appareil. Tout sera synchronisé au retour du réseau.</p>':''}<div class="row"><select onchange="S.mf=this.value;draw()"><option value="">Tous les matchs</option><option value="open" ${S.mf=='open'?'selected':''}>En cours</option><option value="closed" ${S.mf=='closed'?'selected':''}>Terminés</option></select></div>
-    ${S.matches.map((m,i)=>((S.mf&&(S.mf=='closed')!=!!m.closed)||!inG(m))?'':`<div class="card row nw"><button style="text-align:left" onclick="openMatch(S.matches[${i}])"><b>${esc(m.team)}</b> vs ${esc(m.opp||'?')}<br><span class="mut">${new Date(m.created_at).toLocaleString('fr-FR')} · ${m.closed?'✅ '+(m.final?m.final.h+' : '+m.final.a:'terminé'):'🔴 en cours'}${m.season?' · '+esc(m.season):''}</span></button>${canW()?`<button class="nf" onclick="delMatch(${i})">🗑</button>`:''}</div>`).join('')||'<p class="mut">Aucun match pour le moment.</p>'}
+    ${S.matches.map((m,i)=>((S.mf&&(S.mf=='closed')!=!!m.closed)||!inG(m))?'':`<div class="card row nw"><button style="text-align:left" onclick="openMatch(S.matches[${i}])"><b>${esc(m.team)}</b> vs ${esc(m.opp||'?')}<br><span class="mut">${new Date(m.created_at).toLocaleString(LOC())} · ${m.closed?'✅ '+(m.final?m.final.h+' : '+m.final.a:'terminé'):'🔴 en cours'}${m.season?' · '+esc(m.season):''}</span></button>${canW()?`<button class="nf" onclick="delMatch(${i})">🗑</button>`:''}</div>`).join('')||'<p class="mut">Aucun match pour le moment.</p>'}
     ${canW()?`<div class="card"><h2>Nouveau match</h2>${['tm','op'].map((id,i)=>`<label>${i?'Adversaire':'Mon équipe'}<select id="${id}" onchange="document.getElementById('${id}n').style.display=this.value=='__new'?'block':'none'"><option value="">${i?'— à définir plus tard —':'— choisir une équipe —'}</option>${GT().map(t=>`<option>${esc(t.name)}</option>`).join('')}<option value="__new">➕ Nouvelle équipe…</option></select><input id="${id}n" placeholder="Nom de la nouvelle équipe" style="display:none"></label>`).join('')}
     <label>Saison<select id="sea" onchange="document.getElementById('sean').style.display=this.value=='__new'?'block':'none'">${seas().map(x=>`<option>${esc(x)}</option>`).join('')}<option value="__new">➕ Nouvelle saison…</option></select><input id="sean" placeholder="Ex. 2026-2027" style="display:${seas().length?'none':'block'}"></label><label><input type="checkbox" id="ins" checked>Compter dans les stats de saison</label>
     <div class="row"><label>Périodes<input id="np" type="number" inputmode="numeric" value="4"></label><label>Durée (min)<input id="du" type="number" inputmode="numeric" value="10"></label></div>
     <p class="mut">Une équipe enregistrée importe son effectif. Une nouvelle équipe se complète dans l'onglet Effectif (puis 💾 pour la retrouver la prochaine fois).</p><button class="p" style="width:100%" onclick="createMatch()">Créer et démarrer</button><p class="err">${S.err}</p></div>`:''}<div class="row" style="margin-top:16px">${S.role=='admin'?'<button onclick="openAcc()">🔐 Comptes'+((S.reqs&&S.reqs.length)?' 🔴 '+S.reqs.length:'')+'</button>':''}<button onclick="openTrash()">🗑 Corbeille${trN()?' ('+trN()+')':''}</button><button onclick="backup()">⬇ Sauvegarde</button><button onclick="document.getElementById('rf').click()">⬆ Restaurer</button><input type="file" id="rf" accept=".json" hidden onchange="restore(this)"></div>`+FT+gpH()+dlgH();return;}
   const st=stats(),ons=st.c,by={};st.rows.forEach(p=>by[p.k]=p);
-  const srt=a=>a.slice().sort((x,y)=>by[x].n-by[y].n),hOn=srt(ons.filter(k=>k<1000)),oOn=srt(ons.filter(k=>k>=1000)),oN=S.m.opp||'Adversaire';
+  const srt=a=>a.slice().sort((x,y)=>by[x].n-by[y].n),hOn=srt(ons.filter(k=>k<1000)),oOn=srt(ons.filter(k=>k>=1000)),oN=S.m.opp||AD();
   const pb=(k,f,cl)=>{const p=by[k];return `<button class="pl ${cl}${p.pf>=5?' f5':p.pf==4?' f4':''}${p.stint>=LIM?' long':''}" style="flex:0 0 auto;border-top:3px solid ${tcol(p.o)||'var(--bd)'}" onclick="${f}(${k})">${p.photo?av(p,24):''}#${p.n}<small>${esc(dn(p))}</small><small>${p.pts}pt ${p.pf}F</small></button>`};
   const head=`<div class="row"><button class="nf" onclick="${S.obs?'obsLeave()':'home()'}">←</button><div class="sc">${lg(0)} ${esc(S.m.team.slice(0,10))} ${st.h} : ${st.a} ${esc(oN.slice(0,10))} ${lg(1)}</div>${S.obs?'<span class="mut nf">🔴 direct</span>':`<button class="nf" onclick="share()">📡${S.m.code?' '+S.m.code:''}</button><button class="nf" onclick="duoMenu()">👥${S.duo=='main'?' ⏱':S.duo=='follow'?' 👀':''}</button><span class="nf" id="pend" style="font-size:12px;padding:4px 8px;border:1px solid var(--bd);border-radius:12px;white-space:nowrap">${pending()}</span>`}</div>
   <div class="tabs row">${(S.obs?[['dir','Direct'],['box','Stats'],['pbp','Play-by-play']]:[['rec','Saisie'],['box','Stats'],['ros','Effectif']]).map(t=>`<button class="${S.tab==t[0]?'on':''}" onclick="S.tab='${t[0]}';draw()">${t[1]}</button>`).join('')}</div>${S.obs?'<button style="width:100%;margin:6px 0" onclick="S.view=\'board\';draw()">📺 Passer en mode scoreboard (projection)</button>':''}`;
   let body='';
   if(S.tab=='dir'){
     const pr=k=>{const p=by[k];return `<div class="row nw" style="padding:6px 0;border-bottom:1px solid var(--bd)"><span><b>#${p.n}</b> ${esc(dn(p))}</span><span class="mut" style="text-align:right;flex:2">${p.pts} pts · ${p.reb} reb · ${p.ast} pd · ${p.pf} F</span></div>`};
-    body=`<div class="sc" style="margin:10px 0">${PL(S.qt)} · <span id="oclk">${mmss(Math.ceil(S.rem))}</span>${arrow()!=null?' · ⇄ '+esc(arrow()?(S.m.opp||'Adv.'):S.m.team):''}</div><div class="card"><div class="tl"><span><b>${esc(S.m.team)}</b> ${bonus(0)}</span>${fsq(tfl(0))}</div>${hOn.map(pr).join('')||'<p class="mut">—</p>'}</div><div class="card"><div class="tl"><span><b>${esc(oN)}</b> ${bonus(1)}</span>${fsq(tfl(1))}</div>${oOn.map(pr).join('')||'<p class="mut">—</p>'}</div>`;
+    body=`<div class="sc" style="margin:10px 0">${PL(S.qt)} · <span id="oclk">${mmss(Math.ceil(S.rem))}</span>${arrow()!=null?' · ⇄ '+esc(arrow()?(S.m.opp||AD2()):S.m.team):''}</div><div class="card"><div class="tl"><span><b>${esc(S.m.team)}</b> ${bonus(0)}</span>${fsq(tfl(0))}</div>${hOn.map(pr).join('')||'<p class="mut">—</p>'}</div><div class="card"><div class="tl"><span><b>${esc(oN)}</b> ${bonus(1)}</span>${fsq(tfl(1))}</div>${oOn.map(pr).join('')||'<p class="mut">—</p>'}</div>`;
   }else if(S.tab=='pbp'){
     body=`<div class="card">${S.ev.slice().reverse().slice(0,300).map(e=>`<div class="row nw" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span class="mut nf" style="width:72px">${PL(e.quarter)} ${mmss(e.clock)}</span><span>${e.type=='in'?'🔼 Entrée':e.type=='out'?'🔽 Sortie':'<b>'+(TL[e.type]||ARL(e.type)||e.type)+'</b>'}${e.player!=null?' — '+esc(who(e.player)):''}</span></div>`).join('')||'<p class="mut">Aucun évènement.</p>'}</div>`;
   }else if(S.tab=='rec'&&S.panel=='start'){
@@ -1019,6 +1022,459 @@ function draw(){
 }
 document.addEventListener('click',e=>{if(S.view!='live'||e.target.closest('.pl,.st'))return;if(S.sel!=null||S.ps){S.sel=null;S.ps=null;draw();}});
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+
+/* i18n FR/EN */
+const DICT=new Map(`Connexion=>Log in
+Mot de passe oublié ?=>Forgot password?
+👀 Suivre un match en direct (sans compte)=>👀 Follow a live match (no account)
+🎮 Tester par vous-même !=>🎮 Try it yourself!
+📝 Demander mon compte et mes catégories=>📝 Request my account and categories
+Identifiant (e-mail)=>Username (e-mail)
+Mot de passe=>Password
+Se déconnecter=>Log out
+Mon équipe=>My team
+Adversaire=>Opponent
+Adv.=>Opp.
+👥 Équipes=>👥 Teams
+📊 Saisons=>📊 Seasons
+⬇ Sauvegarde=>⬇ Backup
+⬆ Restaurer=>⬆ Restore
+Tous les matchs=>All matches
+En cours=>In progress
+Terminés=>Finished
+Aucun match pour le moment.=>No matches yet.
+Nouveau match=>New match
+— choisir une équipe —=>— choose a team —
+— à définir plus tard —=>— to be set later —
+➕ Nouvelle équipe…=>➕ New team…
+Saison=>Season
+➕ Nouvelle saison…=>➕ New season…
+Compter dans les stats de saison=>Count in season stats
+Périodes=>Periods
+Durée (min)=>Duration (min)
+Créer et démarrer=>Create and start
+📴 Hors connexion — données enregistrées sur cet appareil. Tout sera synchronisé au retour du réseau.=>📴 Offline — data saved on this device. Everything will sync when the connection is back.
+Choisir un groupe=>Choose a group
+Fermer=>Close
+🔄 Changement=>🔄 Substitution
+📋 Historique=>📋 History
+↩ Annuler=>↩ Undo
+Annuler=>Cancel
+Valider=>Confirm
+Confirmer=>Confirm
+Confirmer ?=>Confirm?
+Passer=>Skip
+Retour=>Back
+Statistique=>Stat
+Modifier l'évènement=>Edit event
+Supprimer=>Delete
+Entrent=>Coming in
+Sortent=>Going out
+Aucun remplaçant=>No substitute
+Changement=>Substitution
+Historique=>History
+Aucun évènement.=>No events.
+Flèche=>Arrow
+Flèche de possession :=>Possession arrow:
+possession=>possession
+Composition de départ=>Starting lineup
+📋 Composition de départ=>📋 Starting lineup
+Plus tard=>Later
+Commencer=>Start
+Touche un joueur pour changer son statut :=>Tap a player to change their status:
+présent=>present
+(violet) →=>(purple) →
+titulaire=>starter
+(vert, 5 maximum par équipe) →=>(green, 5 max per team) →
+absent=>absent
+(gris, masqué dans les stats).=>(grey, hidden from stats).
+Régler le chrono=>Set the clock
+minutes · secondes — fais glisser les roues (1 seconde par cran)=>minutes · seconds — drag the wheels (1 second per notch)
+Fin de=>End of
+. Passer à=>. Switch to
+Passer à=>Switch to
+Vérifie que toutes les stats sont enregistrées.=>Make sure all stats are recorded.
+🔼 Entrée=>🔼 In
+🔽 Sortie=>🔽 Out
+Qui a subi la faute ?=>Who was fouled?
+Qui a fait la faute ?=>Who committed the foul?
+Qui a marqué ?=>Who scored?
+joueur retiré=>removed player
+Faute provoquée=>Foul drawn
+Faute=>Foul
+Passe déc.=>Assist
+Total=>Total
+Score par période=>Score by period
++/- par cinq majeur=>+/- by lineup
+Aucun cinq complet pour le moment.=>No full lineup yet.
+🏁 Terminer le match=>🏁 End match
+🔓 Rouvrir le match=>🔓 Reopen match
+⬇ Exporter…=>⬇ Export…
+💾 Enregistrer l'équipe=>💾 Save team
+🔄 Mettre à jour depuis l'équipe enregistrée=>🔄 Update from saved team
+Tirs=>Shots
+Exporter=>Export
+Période=>Period
+Match complet=>Full match
+Tableau de stats=>Stats table
+Carte des tirs=>Shot chart
+Courbes du score et de l'écart=>Score and margin charts
+Joueur=>Player
+TIM=>MIN
+PD=>AST
+INT=>STL
+CT=>BLK
+CTR=>BLK
+BP=>TO
+F=>FOL
+FP=>FD
+LF=>FT
++LF=>+FT
+MJ=>GP
+REB. OFF.=>ORB
+REB. DÉF.=>DRB
+P. DÉC.=>AST
+F. PROV.=>FD
+FAUTE=>FOL
+Effectif=>Roster
+Saisie=>Entry
+Nouveau joueur=>New player
+Modifier le joueur=>Edit player
+Photo=>Photo
+Numéro=>Number
+Nom=>Last name
+Prénom=>First name
+Poste=>Position
+Absent à ce match=>Absent for this match
+Réglages=>Settings
+Thème=>Theme
+Clair=>Light
+Sombre=>Dark
+Taille des boutons de saisie=>Entry button size
+Normale=>Normal
+Grande=>Large
+Très grande=>Extra large
+🔑 Changer mon mot de passe=>🔑 Change my password
+Enregistrer=>Save
+← Retour=>← Back
+← Quitter=>← Exit
+⛶ Plein écran=>⛶ Full screen
+Chargement…=>Loading…
+♻️ Restaurer=>♻️ Restore
+Vider la corbeille=>Empty trash
+La corbeille est vide.=>The trash is empty.
+Équipes=>Teams
+✏️ Modifier=>✏️ Edit
+Aucune équipe enregistrée. Enregistre-en une depuis l'onglet Effectif d'un match (bouton 💾).=>No saved team. Save one from a match's Roster tab (💾 button).
+Nom de l’équipe=>Team name
+✏️ Renommer l’équipe=>✏️ Rename team
+Logo=>Logo
+Couleur=>Color
+⬇ Modèle Excel=>⬇ Excel template
+📥 Importer Excel=>📥 Import Excel
+Nom de la nouvelle équipe=>New team name
+Comptes=>Accounts
+Créer un compte=>Create an account
+Statisticien (saisie)=>Statistician (entry)
+Lecteur (consultation)=>Reader (view only)
+Administrateur=>Administrator
+Créer le compte=>Create account
+Groupes=>Groups
+＋ Créer=>＋ Create
+Groupes accessibles=>Accessible groups
+Demander un compte=>Request an account
+Votre nom=>Your name
+E-mail (ce sera votre identifiant)=>E-mail (this will be your username)
+Joueurs=>Players
+＋ Ajouter une catégorie=>＋ Add a category
+Message (facultatif)=>Message (optional)
+📨 Envoyer ma demande=>📨 Send my request
+✅ Demande envoyée=>✅ Request sent
+Merci ! Votre demande a bien été transmise. Vous recevrez vos accès par e-mail après validation.=>Thank you! Your request has been sent. You will receive your login details by e-mail after validation.
+← Retour à l’accueil=>← Back to home
+✅ Valider (Statisticien)=>✅ Approve (Statistician)
+Tester LaFeuille=>Try LaFeuille
+Envie de l’utiliser pour votre club ?=>Want to use it for your club?
+📝 Demander mon compte=>📝 Request my account
+🎮 Mode démo=>🎮 Demo mode
+— rien n’est enregistré=>— nothing is saved
+📖 Guide=>📖 Guide
+Suivez le guide !=>Follow the guide!
+Suivant →=>Next →
+Nouveau mot de passe=>New password
+Confirmer le mot de passe=>Confirm password
+Nouveau mot de passe (8 caractères minimum)=>New password (8 characters minimum)
+Mot de passe (6 caractères min.)=>Password (6 characters min.)
+E-mail (identifiant)=>E-mail (username)
+Nom du groupe (ex. U15 filles)=>Group name (e.g. U15 girls)
+Suivre le match=>Follow the match
+Afficher le scoreboard=>Show scoreboard
+👀 Suivi en direct=>👀 Live follow
+🔴 direct=>🔴 live
+📺 Passer en mode scoreboard (projection)=>📺 Switch to scoreboard mode (projection)
+Joueurs et saisons=>Players and seasons
+Fiche joueur=>Player profile
+Toutes les saisons=>All seasons
+Matchs=>Matches
+Matchs de l’équipe=>Team matches
+Écart=>Margin
+Moyennes par match. Touche un joueur pour sa fiche.=>Averages per match. Tap a player for their profile.
+🔗 Lien copié=>🔗 Link copied
+Partage arrêté=>Sharing stopped
+👁 Lecture seule=>👁 Read only
+📴 Hors connexion — données locales=>📴 Offline — local data
+⏱ Temps mort=>⏱ Timeout
+✅ Fait=>✅ Done
+Connexion requise=>Connection required
+Fichier invalide=>Invalid file
+✅ Sauvegarde téléchargée=>✅ Backup downloaded
+✅ Sauvegarde restaurée=>✅ Backup restored
+🏁 Match terminé=>🏁 Match ended
+🔓 Match rouvert=>🔓 Match reopened
+🗑 Match mis à la corbeille=>🗑 Match moved to trash
+🗑 Équipe mise à la corbeille=>🗑 Team moved to trash
+🗑 Groupe mis à la corbeille=>🗑 Group moved to trash
+♻️ Restauré=>♻️ Restored
+🗑 Supprimé définitivement=>🗑 Permanently deleted
+🗑 Corbeille vidée=>🗑 Trash emptied
+🔄 Changement enregistré=>🔄 Substitution saved
+🗑 Évènement supprimé=>🗑 Event deleted
+↩ Annulé :=>↩ Undone:
+✏️ Modifié :=>✏️ Edited:
+Erreur :=>Error:
+5 titulaires maximum=>5 starters maximum
+✅ Composition enregistrée=>✅ Lineup saved
+⏱ Le chrono est tenu par le saisisseur principal=>⏱ The clock is run by the main scorer
+Numéro requis=>Number required
+E-mail requis=>E-mail required
+6 caractères minimum=>6 characters minimum
+Nom d'équipe manquant=>Team name missing
+✅ Groupe créé=>✅ Group created
+✅ Groupe renommé=>✅ Group renamed
+Image illisible=>Unreadable image
+Cette équipe existe déjà=>This team already exists
+Ce nom est déjà pris=>This name is already taken
+Choisis ou crée ton équipe=>Choose or create your team
+📧 Si ce compte existe, un e-mail vient d’être envoyé. Pensez à vérifier vos spams !=>📧 If this account exists, an e-mail has just been sent. Remember to check your spam folder!
+✅ Mot de passe modifié=>✅ Password changed
+Mettre le match=>Move the match
+Mettre l'équipe=>Move the team
+Mettre le groupe=>Move the group
+à la corbeille ?=>to the trash?
+Tu pourras le restaurer depuis la Corbeille (page d'accueil).=>You can restore it from the Trash (home page).
+Tu pourras le restaurer depuis la Corbeille.=>You can restore it from the Trash.
+Terminer le match ?=>End the match?
+Rouvrir le match ?=>Reopen the match?
+La saisie sera de nouveau possible.=>Entry will be possible again.
+Impossible de revenir en arrière.=>This cannot be undone.
+Recadrer l'image=>Crop the image
+Glisse pour déplacer · curseur pour zoomer=>Drag to move · slider to zoom
+📊 Stats=>📊 Stats
+12 raisons de passer à LaFeuille=>12 reasons to switch to LaFeuille
+Découvrez en 12 étapes tout ce que LaFeuille apporte à votre club, à vos coachs et à vos supporters.=>Discover in 12 steps everything LaFeuille brings to your club, your coaches and your fans.
+Saisie en direct=>Live entry
+Une action, un joueur associé : points, rebonds, passes, interceptions, contres, balles perdues, fautes. Le score se met à jour tout seul, avec annulation en un clic.=>One action, one player: points, rebounds, assists, steals, blocks, turnovers, fouls. The score updates by itself, with one-click undo.
+Effectif prêt en 1 minute=>Roster ready in 1 minute
+Importez votre effectif depuis un fichier Excel (modèle fourni) ou ajoutez les joueurs à la main. Vous pouvez même ajouter leur photo !=>Import your roster from an Excel file (template provided) or add players by hand. You can even add their photo!
+Présents, titulaires, absents=>Present, starters, absent
+Avant le coup d’envoi, chaque joueur est marqué présent, titulaire ou absent. Les absents ne comptent pas dans le tableau de stats. Les changements se font en deux clics.=>Before tip-off, each player is marked present, starter or absent. Absent players don't count in the stats table. Substitutions take two taps.
+Chrono et périodes=>Clock and periods
+Chrono intégré avec réglage rapide, quart-temps et prolongations, fautes d’équipe avec bonus. La 4e faute d’un joueur est signalée en orange, la 5e en rouge : c’est l’heure du changement !=>Built-in clock with quick adjustment, quarters and overtimes, team fouls with bonus. A player's 4th foul is shown in orange, the 5th in red: time for a substitution!
+Carte des tirs=>Shot chart
+Chaque tir peut être placé sur le terrain : réussis et ratés, par équipe et par joueur. Mettez en lumière les hot spots !=>Every shot can be placed on the court: made and missed, by team and by player. Spot the hot spots!
+Stats et évaluation=>Stats and evaluation
+Tableau complet par joueur (points, rebonds, passes, interceptions, contres, balles perdues, fautes, tirs, +/-) avec l’évaluation, et l’historique action par action.=>Full table per player (points, rebounds, assists, steals, blocks, turnovers, fouls, shots, +/-) with the evaluation, and the action-by-action history.
+Parents ou supporters=>Parents or fans
+Ils entrent le code du match (ou ouvrent le lien partagé) et suivent score, chrono, stats et historique en temps réel, sans compte et sans rien installer.=>They enter the match code (or open the shared link) and follow score, clock, stats and history in real time, with no account and nothing to install.
+Scoreboard plein écran=>Full-screen scoreboard
+Un affichage géant du score en cas de panne dans la salle, avec logos et couleurs des équipes, fautes d’équipe et flèche de possession.=>A giant score display in case the gym scoreboard fails, with team logos and colors, team fouls and possession arrow.
+Fiches joueurs et saisons=>Player profiles and seasons
+Moyennes et progression de chaque joueur au fil des matchs et des saisons. Plus qu’un suivi à l’échelle d’un match, suivez l’évolution !=>Averages and progress of each player over matches and seasons. More than single-match tracking: follow the evolution!
+Groupes et comptes=>Groups and accounts
+Un espace par catégorie (U11, U13, U15…). Chaque statisticien ne voit que ses groupes.=>One space per category (U11, U13, U15…). Each statistician only sees their groups.
+Hors connexion et installable=>Offline and installable
+Un match se saisit même sans réseau : tout se synchronise au retour de la connexion. L’appli s’installe aussi sur l’écran d’accueil comme une vraie application.=>A match can be entered even without a network: everything syncs when the connection is back. The app also installs on your home screen like a real app.
+Export=>Export
+Exportez le match (tableau, carte des tirs, courbes du score et de l’écart, score final) pour un partage facile !=>Export the match (table, shot chart, score and margin charts, final score) for easy sharing!
+🎮 Essayer un vrai match=>🎮 Try a real match
+🎮 Essayer avec un vrai match de démo=>🎮 Try with a real demo match
+Les Aigles=>The Eagles
+Les Lions=>The Lions
+Clé Supabase non renseignée.=>Supabase key not set.
+Passe décisive ?=>Assist?
+Sans passe=>No assist
+Type de panier=>Shot type
+aucune ligne modifiée (droits insuffisants ?)=>no rows modified (insufficient rights?)
+🗑 Corbeille pas encore activée : ouvre « 🗑 Corbeille » sur l'accueil pour la mettre en place=>🗑 Trash not enabled yet: open "🗑 Trash" on the home page to set it up
+🗑 Match supprimé (jamais synchronisé)=>🗑 Match deleted (never synced)
+Son effectif enregistré sera masqué (restaurable). Les matchs déjà joués ne sont pas modifiés.=>Its saved roster will be hidden (restorable). Matches already played are not modified.
+📡 Partage en direct : disponible avec un compte=>📡 Live sharing: available with an account
+Code à saisir sur la page de connexion :=>Code to enter on the login page:
+🔗 Copier le lien de suivi=>🔗 Copy the follow link
+📺 Ouvrir le scoreboard=>📺 Open scoreboard
+⛔ Arrêter le partage=>⛔ Stop sharing
+Code invalide ou partage terminé=>Invalid code or sharing ended
+👥 Saisie à deux : disponible avec un compte=>👥 Two-person entry: available with an account
+👥 Saisie à deux=>👥 Two-person entry
+Deux personnes saisissent le=>Two people enter the
+même match=>same match
+en même temps (par exemple une par équipe) : chacune ouvre ce match avec son compte. Le=>at the same time (for example one per team): each opens this match with their account. The
+principal=>main scorer
+tient le chrono ; le=>runs the clock; the
+second=>second scorer
+le suit automatiquement et ne peut pas le modifier. Chacun ne peut annuler que ses propres saisies. Les saisies de l'autre arrivent en 3 secondes environ.=>follows it automatically and cannot change it. Each person can only undo their own entries. The other person's entries arrive within about 3 seconds.
+Mode actuel :=>Current mode:
+principal (chrono)=>main (clock)
+second (suit le chrono)=>second (follows the clock)
+⏱ Je suis le principal=>⏱ I'm the main scorer
+👀 Je suis le second=>👀 I'm the second scorer
+❌ Désactiver=>❌ Disable
+⏱ Principal : tu tiens le chrono=>⏱ Main: you run the clock
+👀 Second : le chrono suit le principal=>👀 Second: the clock follows the main scorer
+Saisie à deux désactivée=>Two-person entry disabled
+Entre le code du match=>Enter the match code
+Connexion requise pour charger ces stats=>Connection required to load these stats
+🏁 Match terminé — rouvre-le pour modifier=>🏁 Match ended — reopen it to edit
+🏁 Match terminé — saisie verrouillée (voir l'onglet Stats pour le rouvrir)=>🏁 Match ended — entry locked (see the Stats tab to reopen it)
+. La saisie sera verrouillée (tu pourras le rouvrir).=>. Entry will be locked (you can reopen it).
+Préparation de la sauvegarde…=>Preparing the backup…
+Connexion requise pour la sauvegarde=>Connection required for the backup
+Restaurer=>Restore
+match(s),=>match(es),
+équipe(s) et=>team(s) and
+évènements ?=>events?
+Les éléments existants de même identifiant seront remplacés.=>Existing items with the same ID will be replaced.
+Connexion requise pour générer le modèle=>Connection required to generate the template
+joueur(s) importé(s)=>player(s) imported
+Une équipe de ce nom est dans la corbeille : restaure-la ou supprime-la définitivement=>A team with this name is in the trash: restore it or delete it permanently
+📷 Photos : disponibles avec un compte=>📷 Photos: available with an account
+Erreur photo :=>Photo error:
+Cette équipe n'est pas enregistrée=>This team is not saved
+Fonction « admin-users » injoignable : vérifie son déploiement dans Supabase=>"admin-users" function unreachable: check its deployment in Supabase
+Groupes non attribués :=>Groups not assigned:
+✅ Accès ajouté=>✅ Access added
+Accès retiré=>Access removed
+📋 SQL copié=>📋 SQL copied
+Copie impossible : sélectionne le texte=>Copy failed: select the text
+Suppression impossible :=>Cannot delete:
+des données y sont encore rattachées=>data is still attached to it
+Supprimer définitivement=>Permanently delete
+Vider la corbeille ?=>Empty the trash?
+Tout sera définitivement supprimé (impossible de revenir en arrière).=>Everything will be permanently deleted (this cannot be undone).
+équipe=>team
+Renommer le groupe=>Rename the group
+Supprimer le compte=>Delete the account
+Cette personne ne pourra plus se connecter.=>This person will no longer be able to log in.
+Vérifie que toutes les stats de=>Make sure all stats for
+sont enregistrées : le chrono sera remis à=>are recorded: the clock will be reset to
+Rien à annuler : tu ne peux annuler que tes propres saisies=>Nothing to undo: you can only undo your own entries
+flèche de possession=>possession arrow
+Envoi de la photo…=>Uploading the photo…
+Absent à ce match=>Absent for this match
+🖼️ Résumé à partager ·=>🖼️ Summary to share ·
+🖼️ Résumé à partager=>🖼️ Summary to share
+Choisis des joueurs et un contenu=>Choose players and content
+Évolution du score=>Score progression
+Votre compte « Statisticien » sera créé après validation, avec vos catégories et vos joueurs déjà prêts.=>Your "Statistician" account will be created after validation, with your categories and players already set up.
+(un par ligne : numéro nom prénom poste)=>(one per line: number last name first name position)
+Saisissez votre e-mail ci-dessus, puis cliquez sur « Mot de passe oublié ? »=>Enter your e-mail above, then click "Forgot password?"
+8 caractères minimum=>8 characters minimum
+Les deux mots de passe sont différents=>The two passwords are different
+Matchs créés :=>Matches created:
+Matchs ouverts par des supporters :=>Matches opened by fans:
+Démos lancées :=>Demos launched:
+Écart de points par match (vert : victoire). Touchez deux matchs pour les comparer.=>Point margin per match (green: win). Tap two matches to compare them.
+Écart du match=>Match margin
+Connexion requise pour renommer une équipe=>Connection required to rename a team
+Les=>The
+déjà joué=>already played
+avec cette équipe seront mis à jour avec le nouveau nom.=>with this team will be updated with the new name.
+renommage refusé=>rename refused
+⚠️ Équipe renommée, mais certains matchs n’ont pas pu être mis à jour=>⚠️ Team renamed, but some matches could not be updated
+✅ Équipe renommée=>✅ Team renamed
+Mettre à jour=>Update
+Aucun match comptabilisé pour cette sélection.=>No match counted for this selection.
+pts marqués /=>pts scored /
+encaissés=>conceded
+✅ Les modifications sont enregistrées automatiquement. Dans un match, onglet Effectif, « 🔄 Mettre à jour depuis l'équipe enregistrée » reprend ces changements.=>✅ Changes are saved automatically. In a match, Roster tab, "🔄 Update from saved team" picks up these changes.
+Une équipe enregistrée importe son effectif. Une nouvelle équipe se complète dans l'onglet Effectif (puis 💾 pour la retrouver la prochaine fois).=>A saved team imports its roster. A new team is completed in the Roster tab (then 💾 to find it again next time).
+Touche « Changement » pour placer les joueurs.=>Tap "Substitution" to place the players.
+Score final=>Final score
+Cette personne ne pourra plus se connecter.=>This person will no longer be able to log in.
+Catégorie=>Category
+Un e-mail l’en informera.=>An e-mail will let them know.
+(Statisticien) avec=>(Statistician) with
+groupe(s) et leurs joueurs ?=>group(s) and their players?
+Mot de passe provisoire :=>Temporary password:
+Identifiant :=>Username:
+Mot de passe :=>Password:
+✉️ Envoyer ces accès par e-mail=>✉️ Send these credentials by e-mail
+Pour votre sécurité, remplacez le mot de passe provisoire par le vôtre.=>For your security, replace the temporary password with your own.
+📈 Usage (30 derniers jours)=>📈 Usage (last 30 days)
+Comptes :=>Accounts:
+supprimé le=>deleted on
+La corbeille n'est pas encore activée=>The trash is not enabled yet
+Une seule fois : ouvre ton projet=>One time only: open your project
+→ menu=>→ menu
+→ colle le texte ci-dessous → clique sur=>→ paste the text below → click
+. Reviens ensuite ici et touche « Revérifier ».=>. Then come back here and tap "Recheck".
+📋 Copier le SQL=>📋 Copy the SQL
+🔄 Revérifier=>🔄 Recheck
+Groupes accessibles (inutile pour un administrateur)=>Accessible groups (not needed for an administrator)
+Administrateur : accès à tous les groupes=>Administrator: access to all groups
+Logout=>Log out
+Saison (facultatif, ex. 2026-2027)=>Season (optional, e.g. 2026-2027)
+Nom de l’équipe (facultatif)=>Team name (optional)
+Nouveau groupe (ex. U15)=>New group (e.g. U15)
+CODE=>CODE
+Ce groupe contient encore=>This group still contains
+Un groupe porte déjà ce nom=>A group already has this name
+Renommage impossible :=>Rename failed:
+💾 Équipes enregistrées : disponible avec un compte=>💾 Saved teams: available with an account
+💾 Équipe «=>💾 Team «
+Compte créé mais introuvable : attribue les groupes à la main=>Account created but not found: assign the groups by hand
+Erreur groupe :=>Group error:
+Équipe non créée :=>Team not created:
+Renommer=>Rename
+Refuser la demande de=>Decline the request from
+Créer le compte=>Create the account
+Écart=>Margin
+Nom et e-mail valides requis=>Valid name and e-mail required
+Indiquez au moins un nom de groupe=>Enter at least one group name
+Joueurs=>Players
+📨 Demandes de compte (=>📨 Account requests (
+Refuser=>Decline
+Accepter=>Accept
+Supprimer le compte=>Delete the account
+Valider=>Confirm
+Annuler=>Cancel
+Retour=>Back
+Aucune demande=>No requests`.split('\n').filter(Boolean).map(l=>l.split('=>')));
+const RXS=[[/joueur\(s\) mis à jour depuis «/,'player(s) updated from «'],[/ joueur\(s\)/,' player(s)'],[/\/5 après changement\)/,'/5 after substitution)'],[/^Où était le tir \?/,'Where was the shot?'],[/^Écart de score au fil du match \(en haut : (.*) devant\)$/,'Score margin over the match (top: $1 ahead)'],[/^Écart de score \(final/,'Score margin (final'],[/ joueurs?\b/,m=>/s$/.test(m)?' players':' player'],[/^(\d+) matchs?$/,(m,n)=>n+(n>1?' matches':' match')],[/^Catégorie (\d+)$/,'Category $1'],[/^Mettre à jour (.*)$/,'Update $1'],[/^Passer à /,'Switch to '],[/^En haut : (.*) devant$/,'Top: $1 ahead'],[/^🏁 Terminer/,'🏁 End'],[/^Score final : /,'Final score: '],[/^🔐 Comptes/,'🔐 Accounts'],[/^🗑 Corbeille/,'🗑 Trash'],[/hors connexion/,'offline'],[/ en attente/,' pending'],[/● réussi ○ raté/,'● made ○ missed'],[/^↔ Flèche : /,'↔ Arrow: '],[/^Toute l'équipe /,'Whole team: '],[/synchronisé/,'synced'],[/🎮 démo/,'🎮 demo']];
+const TLFR={...TL},TLEN={t2m:'+2 pts',t2x:'2 pts missed',t3m:'+3 pts',t3x:'3 pts missed',lfm:'+FT',lfx:'FT missed',ro:'Offensive rebound',rd:'Defensive rebound',ast:'Assist',stl:'Steal',blk:'Block',tov:'Turnover',pf:'Foul',fr:'Foul drawn'};
+function tr1(s){
+  if(LANG!='en'||typeof s!='string')return s;
+  const m=s.match(/^(\s*)([\s\S]*?)(\s*)$/),k=m[2];if(!k)return s;
+  let v=DICT.get(k);
+  if(v==null){const j=k.match(/^([\s\S]*?)( — | : )([\s\S]*)$/);if(j){const a=DICT.get(j[1]);if(a!=null)v=a+j[2]+j[3];else{const b=DICT.get(j[1]+' :');if(j[2]==' : '&&b!=null)v=b+' '+j[3];}}}
+  if(v==null){let x=k;RXS.forEach(r=>{x=x.replace(r[0],r[1])});if(x!==k)v=x;}
+  return v==null?s:m[1]+v+m[3];
+}
+function trDom(){
+  if(LANG!='en')return;const a=document.body;
+  const w=document.createTreeWalker(a,NodeFilter.SHOW_TEXT,{acceptNode:t=>/^(SCRIPT|STYLE|TITLE)$/.test(t.parentNode.nodeName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});let n;
+  while(n=w.nextNode()){const v=tr1(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}
+  a.querySelectorAll('[placeholder],[title],[aria-label]').forEach(e=>['placeholder','title','aria-label'].forEach(k=>{const x=e.getAttribute(k);if(x){const y=tr1(x);if(y!==x)e.setAttribute(k,y);}}));
+}
+function lgBtn(){
+  let b=$('lg');if(!b){b=document.createElement('button');b.id='lg';b.onclick=()=>setLang(LANG=='en'?'fr':'en');document.body.appendChild(b);}
+  document.title=LANG=='en'?'LaFeuille – live basketball stats':'LaFeuille – statistiques de basket en direct';b.innerHTML=LANG=='en'?'FR | <b>EN</b>':'<b>FR</b> | EN';b.style.display=(S.view=='live')?'none':'';
+}
+function setLang(l){LANG=l;try{localStorage.lf_lang=l}catch(e){}document.documentElement.lang=l;Object.assign(TL,l=='en'?TLEN:TLFR);draw();}
+let _tb=0;new MutationObserver(()=>{if(LANG!='en'||_tb)return;_tb=1;setTimeout(()=>{trDom();_tb=0},30)}).observe(document.body,{childList:true,subtree:true,characterData:true});
+const _draw=draw;draw=function(){_draw.apply(this,arguments);trDom();lgBtn();};
+['alert','confirm','prompt'].forEach(f=>{const o=window[f].bind(window);window[f]=(m,...r)=>o(tr1(m),...r);});
+document.documentElement.lang=LANG;Object.assign(TL,LANG=='en'?TLEN:TLFR);
 (async()=>{
   const qp=new URLSearchParams(location.search),lc=qp.get('live')||qp.get('board');
   if(lc){S.omode=qp.get('board')?'board':'follow';ocode=lc.trim().toUpperCase();obsPoll(true);return;}
